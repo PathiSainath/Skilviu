@@ -600,13 +600,13 @@ function Candidatestatus() {
                           <option value="pending">Pending</option>
                           <option value="in_progress">In Progress</option>
                           <option value="completed">Completed</option>
-                          <option value="scheduled">Scheduled</option>
+                          {/* <option value="scheduled">Scheduled</option>
                           <option value="shared">CV Shared</option>
                           <option value="under_review">Under Review</option>
                           <option value="prepared">Prepared</option>
                           <option value="sent">Sent</option>
                           <option value="accepted">Accepted</option>
-                          <option value="rejected">Rejected</option>
+                          <option value="rejected">Rejected</option> */}
                         </select>
                       </div>
                       <p className="text-xs text-gray-600">{step.description}</p>
