@@ -277,7 +277,7 @@ function Clients() {
           className="mb-16"
         >
           <h2 className="text-3xl font-bold text-center text-gray-800 mb-8 bg-gradient-to-r from-pink-500 to-purple-600 bg-clip-text text-transparent">
-            Strategic Collaborations
+            {/* Strategic Collaborations */}
           </h2>
 
           <div className="relative overflow-hidden bg-white rounded-xl shadow-lg py-8">
@@ -325,7 +325,7 @@ function Clients() {
           <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
             <div className="space-y-4">
               {[
-                "IT & Software Services",
+                "IT & Software Development",
                 "Digital Marketing",
                 "Manufacturing",
                 "Sales & Marketing",

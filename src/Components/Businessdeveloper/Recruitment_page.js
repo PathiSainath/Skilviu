@@ -333,7 +333,7 @@ const RecruitmentPage = () => {
           {[
             { label: 'Job Title', name: 'job_title', required: true },
             { label: 'Type of Industry', name: 'type_of_industry', required: true },
-            { label: 'To By Join By', name: 'notice_period', required: true },
+            { label: 'To Be Join By', name: 'notice_period', required: true },
             { label: 'Qualification', name: 'qualification', required: true },
             { label: 'Skills Required', name: 'skills_required', required: true }
           ].map(({ label, name, required }) => (
