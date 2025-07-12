@@ -212,7 +212,7 @@ function Login() {
               <input type="checkbox" className="form-checkbox text-blue-600" />
               <span className="ml-2">Remember me</span>
             </label>
-            <a href="#" className="text-sm text-blue-600 hover:underline">Forgot password?</a>
+            {/* <a href="#" className="text-sm text-blue-600 hover:underline">Forgot password?</a> */}
           </div>
 
           <button
