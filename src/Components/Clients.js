@@ -181,7 +181,6 @@
 // export default Clients;
 
 
-
 import React from 'react';
 import { motion } from 'framer-motion';
 
@@ -208,8 +207,10 @@ function Clients() {
     degefy, socialmedia, Soul, Dc, Infotech, Riyo, Techteam
   ];
 
-  const evenLogos = logos.filter((_, index) => index % 2 === 0);
-  const extendedEvenLogos = [...evenLogos, logos[1]]; // Add one more (odd) for balance
+  // Remove Medimind from second scroll logos explicitly
+  const secondScrollLogos = logos.filter(logo => logo !== Medimind);
+  const evenSecondScrollLogos = secondScrollLogos.filter((_, index) => index % 2 === 0);
+  const extendedEvenLogos = [...evenSecondScrollLogos, secondScrollLogos[1]];
 
   return (
     <div className="bg-gray-50 text-gray-800 font-sans">
@@ -244,7 +245,7 @@ function Clients() {
                 x: {
                   repeat: Infinity,
                   repeatType: "loop",
-                  duration: 60, // slow scroll
+                  duration: 60,
                   ease: "linear",
                 },
               }}
@@ -268,7 +269,7 @@ function Clients() {
           </div>
         </motion.div>
 
-        {/* Second Scroll: Even Index Logos + 1 more */}
+        {/* Second Scroll: Even Index Logos (without Medimind) + 1 more */}
         <motion.div
           initial={{ opacity: 0, y: 50 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -288,7 +289,7 @@ function Clients() {
                 x: {
                   repeat: Infinity,
                   repeatType: "loop",
-                  duration: 60, // matched to the first scroll
+                  duration: 60,
                   ease: "linear",
                 },
               }}

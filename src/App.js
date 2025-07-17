@@ -1,143 +1,3 @@
-// import './App.css';
-// import './index.css';
-
-// import {
-//   BrowserRouter as Router,
-//   Routes,
-//   Route,
-//   useLocation,
-//   Outlet,
-// } from 'react-router-dom';
-
-// import ScrollToTop from './Components/ScrollToTop';
-// import Navbar from './Components/Navbar';
-// import Footer from './Components/Footer';
-
-// // Public Pages
-// import Home from './Components/Home';
-// import Aboutus from './Components/Aboutus';
-// import Services from './Components/Services';
-// import Clients from './Components/Clients';
-// import Careers from './Components/Careers';
-// import Contactus from './Components/Contactus';
-// import Testimonials from './Components/Testimonials';
-// import Jobdetails from './Components/Jobdetails';
-// import Referafriend from './Components/Referafriend';
-
-// // Profiles
-// import Profile1 from './Components/Profile1';
-// import Profile2 from './Components/Profile2';
-// import Profile3 from './Components/Profile3';
-// import Profile4 from './Components/Profile4';
-// import Profile5 from './Components/Profile5';
-// import Profile6 from './Components/Profile6';
-// import Profile7 from './Components/Profile7';
-// import Profile8 from './Components/Profile8';
-
-// // Services
-// import Staffing from './Components/Staffing';
-// import Payroll from './Components/Payroll';
-// import ITmanagement from './Components/ITmanagement';
-// import ITnetwork from './Components/ITnetwork';
-
-// // Admin & Auth
-// import Login from './Components/Login';
-// import Admindashboard from './Components/Admin/Admindashboard';
-// import Dashboardhome from './Components/Admin/Dashboardhome';
-// import Clientform_page from './Components/Admin/Clientform_page';
-// import Recruitment_page from './Components/Admin/Recruitment_page';
-// import Candidateform_page from './Components/Admin/Candidateform_page';
-// import Candidateform from './Components/Candidateform';
-
-// function App() {
-//   return (
-//     <Router>
-//       <ScrollToTop />
-//       <MainLayout />
-//     </Router>
-//   );
-// }
-
-// function MainLayout() {
-//   const location = useLocation();
-//   const isAdminRoute = location.pathname.startsWith('/admindashboard');
-
-//   return (
-//     <>
-//       {!isAdminRoute && <Navbar />}
-
-//       <Routes>
-//         {/* Public Routes */}
-//         <Route path="/" element={<Home />} />
-//         <Route path="/about" element={<Aboutus />} />
-//         <Route path="/services" element={<Services />} />
-//         <Route path="/clients" element={<Clients />} />
-//         <Route path="/careers" element={<Careers />} />
-//         <Route path="/contact" element={<Contactus />} />
-//         <Route path="/testimonials" element={<Testimonials />} />
-//         <Route path="/jobs/:id" element={<Jobdetails />} />
-//         <Route path="/refer" element={<Referafriend />} />
-
-//         {/* Profiles */}
-//         <Route path="/profile1" element={<Profile1 />} />
-//         <Route path="/profile2" element={<Profile2 />} />
-//         <Route path="/profile3" element={<Profile3 />} />
-//         <Route path="/profile4" element={<Profile4 />} />
-//         <Route path="/profile5" element={<Profile5 />} />
-//         <Route path="/profile6" element={<Profile6 />} />
-//         <Route path="/profile7" element={<Profile7 />} />
-//         <Route path="/profile8" element={<Profile8 />} />
-
-//         {/* Services */}
-//         <Route path="/staffing" element={<Staffing />} />
-//         <Route path="/staffing/:id" element={<Staffing />} />
-//         <Route path="/payroll" element={<Payroll />} />
-//         <Route path="/itmanagement" element={<ITmanagement />} />
-//         <Route path="/network" element={<ITnetwork />} />
-
-//         {/* Auth */}
-//         <Route path="/login" element={<Login />} />
-//         <Route path='/candidateform' element={<Candidateform />} />
-
-//         {/* Admin Dashboard (with sidebar and nested pages) */}
-//       <Route path="/admindashboard" element={<AdmindashboardLayout />}>
-//         <Route index element={<Dashboardhome />} />
-//         {/* <Route path="clientform-page" element={<Clientform_page />} /> */}
-//         {/* <Route path="recruitment-page" element={<Recruitment_page />} /> */}
-//         <Route path="candidateform-page" element={<Candidateform_page />} />
-//       </Route>
-
-//       <Route path="/admindashboard" element={<AdmindashboardLayout />}>
-//       <Route path="clientform-page" element={<Clientform_page />} />
-//       <Route path="recruitment-page" element={<Recruitment_page />} />
-
-//       </Route>
-//       </Routes>
-
-//       {!isAdminRoute && <Footer />}
-//     </>
-//   );
-// }
-
-// // Admin layout: sidebar + nested routes
-// function AdmindashboardLayout() {
-//   return (
-//     <div className="flex min-h-screen">
-//       <Admindashboard />
-//       <main className="flex-1 p-4 bg-gray-50 overflow-auto">
-//         <Outlet />
-//       </main>
-//     </div>
-//   );
-// }
-
-// export default App;
-
-
-
-
-
-
 import './App.css';
 import './index.css';
 import React, { useState } from 'react';
@@ -198,6 +58,7 @@ import Businessdashboard from './Components/Businessdeveloper/Businessdashboard'
 import BusinessDashboardHome from './Components/Businessdeveloper/Dashboardhome';
 import BD_Clientform from './Components/Businessdeveloper/Clientform_page';
 import BD_RecruitmentPage from './Components/Businessdeveloper/Recruitment_page';
+import Formedit from './Components/Businessdeveloper/Formedit';
 
 // HR Dashboard
 import HrteamDashboardHome from './Components/Hrteam/Dashboardhome';
@@ -205,6 +66,9 @@ import Candidatestatus from './Components/Hrteam/Candidatestatus';
 import Getintouch from './Components/Getintouch';
 import Disclaimer from './Components/Disclaimer';
 import Positions from './Components/Hrteam/Positions';
+import Clientformedit from './Components/Businessdeveloper/Clientformedit';
+import Scams from './Components/Scams';
+
 
 function App() {
   return (
@@ -236,7 +100,8 @@ function MainLayout() {
         <Route path="/testimonials" element={<Testimonials />} />
         <Route path="/jobs/:id" element={<Jobdetails />} />
         <Route path="/refer" element={<Referafriend />} />
-        <Route path='/getintouch'element={<Getintouch />} />
+        <Route path='/getintouch' element={<Getintouch />} />
+        <Route path='/Scams' element={<Scams />} />
 
         {/* Profiles */}
         <Route path="/profile1" element={<Profile1 />} />
@@ -270,6 +135,10 @@ function MainLayout() {
           <Route index element={<BusinessDashboardHome />} />
           <Route path="clientform-page" element={<BD_Clientform />} />
           <Route path="recruitment-page" element={<BD_RecruitmentPage />} />
+          <Route path='formedit/:id' element={<Formedit />} />
+          <Route path="clientformedit/:id" element={<Clientformedit />} />
+
+
         </Route>
 
         {/* HR Team Dashboard */}
@@ -278,7 +147,7 @@ function MainLayout() {
           <Route path="candidateform-page" element={<Candidateform_page />} />
           <Route path="candidatestatus" element={<Candidatestatus />} />
           <Route path="positions" element={<Positions />} />
-          <Route path="candidatestatus/:jobTitle" element={<Candidatestatus  />} />
+          <Route path="candidatestatus/:jobTitle" element={<Candidatestatus />} />
 
         </Route>
       </Routes>
@@ -372,11 +241,10 @@ function HrteamdashboardLayout() {
             <Link
               key={item.name}
               to={item.path}
-              className={`flex items-center gap-3 px-4 py-2 rounded-lg transition-colors ${
-                location.pathname === item.path
+              className={`flex items-center gap-3 px-4 py-2 rounded-lg transition-colors ${location.pathname === item.path
                   ? 'bg-purple-50 text-purple-600 font-semibold'
                   : 'text-gray-700 hover:bg-gray-100'
-              }`}
+                }`}
               onClick={() => setSidebarOpen(false)}
             >
               {item.icon}

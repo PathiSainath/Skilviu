@@ -17,7 +17,7 @@ function Jobdetails() {
       const fetchJobDetails = async () => {
         try {
           // Fetch the specific job by ID
-          const response = await fetch(`http://127.0.0.1:8000/api/v1/recruitments/${id}`);
+          const response = await fetch(`https://skilviu.com/backend/api/v1/recruitments/${id}`);
           if (!response.ok) throw new Error('Failed to fetch job details');
           const data = await response.json();
           

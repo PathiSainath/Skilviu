@@ -4,17 +4,14 @@ import { NavLink } from 'react-router-dom';
 // Lucide Icons
 import {
   Home,
-  Briefcase,
-  Users,
-  FileText,
-  LogOut,
   ClipboardList,
   FileSignature,
+  FileText,
+  LogOut,
 } from 'lucide-react';
 
 const navItemClass = ({ isActive }) =>
-  `flex items-center px-2 py-1 rounded-md transition-colors duration-200 ${
-    isActive ? 'text-purple-600 font-semibold' : 'text-gray-500 hover:text-purple-600'
+  `flex items-center px-2 py-1 rounded-md transition-colors duration-200 ${isActive ? 'text-purple-600 font-semibold' : 'text-gray-500 hover:text-purple-600'
   }`;
 
 const BusinessSidebar = () => {
@@ -36,14 +33,21 @@ const BusinessSidebar = () => {
             <FileSignature className="mr-2 w-4 h-4" />
             CR FORM
           </NavLink>
-          {/* <NavLink to="/businessdashboard/reports" className={navItemClass}>
+          <NavLink to="/businessdashboard/clientformedit/:id" className={navItemClass}>
             <FileText className="mr-2 w-4 h-4" />
-            Reports
-          </NavLink> */}
+            CO FORM Edit
+          </NavLink>
+          <NavLink to="/businessdashboard/formedit/:id" className={navItemClass}>
+            <FileText className="mr-2 w-4 h-4" />
+            CR FORM Edit
+          </NavLink>
         </nav>
       </div>
 
-      <NavLink to="/login" className="flex items-center text-red-600 font-semibold mt-8 hover:underline">
+      <NavLink
+        to="/login"
+        className="flex items-center text-red-600 font-semibold mt-8 hover:underline"
+      >
         <LogOut className="mr-2 w-4 h-4" />
         Logout
       </NavLink>
