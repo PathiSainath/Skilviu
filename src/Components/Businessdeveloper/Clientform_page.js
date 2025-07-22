@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 function Clientform_page() {
   const [formData, setFormData] = useState({
+    client_id: '',
     company_name: '',
     website: '',
     email: '',
@@ -20,10 +21,26 @@ function Clientform_page() {
     contact_Mobile2: '',
   });
 
+  const [clients, setClients] = useState([]);
   const [errors, setErrors] = useState({});
   const [companyLogo, setCompanyLogo] = useState(null);
   const [slaFile, setSlaFile] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Fetch all clients
+  useEffect(() => {
+    async function fetchClients() {
+      try {
+        const res = await fetch('https://skilviu.com/backend/api/v1/clientforms/dropdown');
+        const data = await res.json();
+        setClients(data); // ✅ No slice — fetch all
+      } catch (error) {
+        console.error('Failed to fetch clients:', error);
+      }
+    }
+
+    fetchClients();
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -42,49 +59,44 @@ function Clientform_page() {
   const validateForm = () => {
     const newErrors = {};
     
-    // Required fields validation
     const requiredFields = [
-      'company_name', 'email', 'phone', 'location', 
+      'client_id', 'company_name', 'email', 'phone', 'location', 
       'gst_number', 'contact_name', 'designation',
       'contact_email', 'contact_phone'
     ];
     
     requiredFields.forEach(field => {
-      if (!formData[field].trim()) {
+      if (!formData[field]?.trim()) {
         newErrors[field] = 'This field is required';
       }
     });
 
-    // Website validation
     if (!formData.website.trim()) {
       newErrors.website = 'Website is required';
     } else if (!/^(https?:\/\/)?(www\.)?[a-zA-Z0-9-]+\.[a-zA-Z]{2,}(\S*)?$/.test(formData.website)) {
       newErrors.website = 'Please enter a valid website URL';
     }
 
-    // Email validation
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       newErrors.email = 'Please enter a valid email';
     }
-    
+
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.contact_email)) {
       newErrors.contact_email = 'Please enter a valid email';
     }
 
-    // Phone validation
-    if (!/^\d{10}$/.test(formData.phone)) {
-      newErrors.phone = 'Phone must be 10 digits';
-    }
-    
-    if (!/^\d{10}$/.test(formData.contact_phone)) {
-      newErrors.contact_phone = 'Phone must be 10 digits';
+    if (!/^\d{10,}$/.test(formData.phone)) {
+      newErrors.phone = 'Phone must be at least 10 digits';
     }
 
-    // File validation
+    if (!/^\d{10,}$/.test(formData.contact_phone)) {
+      newErrors.contact_phone = 'Phone must be at least 10 digits';
+    }
+
     if (!companyLogo) {
       newErrors.company_logo = 'Company logo is required';
     }
-    
+
     if (!slaFile) {
       newErrors.sla_document = 'SLA document is required';
     }
@@ -96,23 +108,19 @@ function Clientform_page() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!validateForm()) {
-      return;
-    }
+    if (!validateForm()) return;
 
     setIsSubmitting(true);
-    
+
     try {
       const formDataToSend = new FormData();
-      
-      // Append all form data
+
       Object.keys(formData).forEach(key => {
         if (formData[key]) {
           formDataToSend.append(key, formData[key]);
         }
       });
-      
-      // Append files
+
       if (companyLogo) formDataToSend.append('company_logo', companyLogo);
       if (slaFile) formDataToSend.append('sla_document', slaFile);
 
@@ -122,13 +130,13 @@ function Clientform_page() {
       });
 
       const data = await response.json();
-      
+
       if (!response.ok) {
         throw new Error(data.message || 'Failed to submit form');
       }
 
-      // Reset form on success
       setFormData({
+        client_id: '',
         company_name: '',
         website: '',
         email: '',
@@ -149,7 +157,7 @@ function Clientform_page() {
       setCompanyLogo(null);
       setSlaFile(null);
       setErrors({});
-      
+
       alert('Form submitted successfully!');
     } catch (error) {
       console.error('Submission error:', error);
@@ -159,10 +167,10 @@ function Clientform_page() {
     }
   };
 
+  // ✅ Updated: No digit limit
   const numberOnlyProps = {
     inputMode: 'numeric',
     pattern: '\\d*',
-    maxLength: 10,
     onKeyDown: (e) => {
       if (
         !/[0-9]/.test(e.key) &&
@@ -172,7 +180,7 @@ function Clientform_page() {
       }
     },
     onInput: (e) => {
-      e.target.value = e.target.value.replace(/\D/g, '').slice(0, 10);
+      e.target.value = e.target.value.replace(/\D/g, '');
     },
   };
 

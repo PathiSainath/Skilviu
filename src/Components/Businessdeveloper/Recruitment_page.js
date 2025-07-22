@@ -5,7 +5,7 @@ const RecruitmentPage = () => {
   const [clients, setClients] = useState([]);
   const [formData, setFormData] = useState({
     client_id: '',
-    client_name: '',
+    client_name: 'Skilviu Soft Solutions LLP',
     job_title: '',
     min_experience: '',
     max_experience: '',
@@ -40,25 +40,30 @@ const RecruitmentPage = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    axios
-      .get('https://skilviu.com/backend/api/v1/clientforms')
-      .then((res) => {
-        if (res.data.status && Array.isArray(res.data.data.data)) {
-          setClients(res.data.data.data);
+    async function fetchClients() {
+      try {
+        const res = await fetch('https://skilviu.com/backend/api/v1/clientforms/dropdown');
+        const json = await res.json();
+
+        if (json.status && Array.isArray(json.data)) {
+          setClients(json.data); // ✅ All clients fetched
         } else {
-          console.error("Client list not found in response:", res.data);
+          console.error('Invalid client data format:', json);
         }
-      })
-      .catch((err) => {
-        console.error('Error fetching clients:', err);
-      });
+      } catch (error) {
+        console.error('Error fetching clients:', error);
+      }
+    }
+
+    fetchClients();
   }, []);
+
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
     if (errors[name]) {
-      setErrors(prev => ({ ...prev, [name]: null }));
+      setErrors((prev) => ({ ...prev, [name]: null }));
     }
   };
 
@@ -72,23 +77,31 @@ const RecruitmentPage = () => {
     });
   };
 
+  // ✅ Added: Handle "Other Benefit"
   const handleOtherBenefitChange = (e) => {
-    setFormData((prev) => ({ ...prev, other_benefit: e.target.value }));
+    const { value } = e.target;
+    setFormData((prev) => ({ ...prev, other_benefit: value }));
+    if (errors.other_benefit) {
+      setErrors((prev) => ({ ...prev, other_benefit: null }));
+    }
   };
 
+  // ✅ Added: Handle JD Document Upload
   const handleDocumentChange = (e) => {
     const file = e.target.files?.[0];
     if (file) {
       setFormData((prev) => ({
         ...prev,
-        jd_document_path: file.name,
+        jd_document_path: file,
       }));
+    }
+    if (errors.jd_document_path) {
+      setErrors((prev) => ({ ...prev, jd_document_path: null }));
     }
   };
 
   const validateForm = () => {
     const newErrors = {};
-
     if (!formData.client_id) newErrors.client_id = 'Client is required';
     if (!formData.client_name) newErrors.client_name = 'Client is required';
     if (!formData.job_title) newErrors.job_title = 'Job title is required';
@@ -144,37 +157,29 @@ const RecruitmentPage = () => {
       ? formData.diversity_other
       : formData.diversity_preference;
 
-    return {
-      client_id: formData.client_id,
-      client_name: formData.client_name,
-      job_title: formData.job_title,
+    const submission = {
+      ...formData,
       min_experience: minExp,
       max_experience: maxExp,
-      preferred_company: formData.preferred_company,
-      type_of_industry: formData.type_of_industry,
-      notice_period: formData.notice_period,
-      benefit: benefitsString,
-      budget: formData.budget,
-      package: formData.package,
-      qualification: formData.qualification,
-      skills_required: formData.skills_required,
-      job_location: formData.job_location,
-      timings: formData.timings,
-      no_of_positions: formData.no_of_positions,
-      working_days: formData.working_days,
       diversity_preference: diversity,
-      hiring_type: formData.hiring_type,
-      work_mode: formData.work_mode,
-      interview_process: formData.interview_process,
-      key_responsibilities: formData.key_responsibilities,
-      job_description: formData.job_description,
-      jd_document_path: formData.jd_document_path,
+      benefit: benefitsString,
     };
+
+    // File upload handling if necessary
+    if (formData.jd_document_path instanceof File) {
+      const formDataToSend = new FormData();
+      Object.entries(submission).forEach(([key, value]) => {
+        formDataToSend.append(key, value);
+      });
+      formDataToSend.append('jd_document_path', formData.jd_document_path);
+      return formDataToSend;
+    }
+
+    return submission;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     setResponseMessage('');
     setSuccessMessage('');
     setErrors({});
@@ -189,21 +194,27 @@ const RecruitmentPage = () => {
     const submissionData = prepareSubmissionData();
 
     try {
+      const config = {
+        headers: {
+          'Accept': 'application/json',
+        },
+      };
+
+      if (submissionData instanceof FormData) {
+        config.headers['Content-Type'] = 'multipart/form-data';
+      } else {
+        config.headers['Content-Type'] = 'application/json';
+      }
+
       const response = await axios.post(
         'https://skilviu.com/backend/api/v1/recruitments',
         submissionData,
-        {
-          headers: {
-            'Content-Type': 'application/json',
-            Accept: 'application/json',
-          },
-        }
+        config
       );
 
       if (response.status === 201) {
-        // ✅ Use the success message returned by Laravel
         setSuccessMessage(`✅ ${response.data.message}`);
-
+        // Reset form
         setFormData({
           client_id: '',
           client_name: '',
@@ -237,10 +248,8 @@ const RecruitmentPage = () => {
       } else {
         setResponseMessage(response.data.message || '❌ Something went wrong.');
       }
-
     } catch (error) {
       console.error('Submission error:', error);
-
       if (error.response?.status === 422 && error.response.data?.errors) {
         setErrors(error.response.data.errors);
         setResponseMessage('❌ Please fix the validation errors.');
@@ -253,7 +262,6 @@ const RecruitmentPage = () => {
       setIsSubmitting(false);
     }
   };
-
 
   const getFieldError = (fieldName) => {
     if (errors[fieldName]) {
@@ -287,7 +295,7 @@ const RecruitmentPage = () => {
 
         <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Client Selection */}
-          <div className="mb-4 relative z-20">
+          {/* <div className="mb-4 relative z-20">
             <label htmlFor="client_id" className="block font-medium mb-1 text-sm">
               Client <span className="text-red-500">*</span>
             </label>
@@ -298,6 +306,33 @@ const RecruitmentPage = () => {
               onChange={handleChange}
               className="w-full border rounded px-3 py-2 bg-white shadow"
               required
+            >
+              <option value="">Select a client</option>
+              {clients.length > 0 ? (
+                clients.map((client) => (
+                  <option key={client.id} value={client.id}>
+                    {client.company_name}
+                  </option>
+                ))
+              ) : (
+                <option disabled>Loading clients...</option>
+              )}
+            </select>
+            {getFieldError('client_id')}
+          </div> */}
+
+          <div className="mb-4 relative z-20">
+            <label htmlFor="client_id" className="block font-medium mb-1 text-sm">
+              Client <span className="text-red-500">*</span>
+            </label>
+            <select
+              name="client_id"
+              id="client_id"
+              value={formData.client_id}
+              onChange={handleChange}
+              className="w-full border rounded px-3 py-2 bg-white shadow max-h-60 overflow-y-auto"
+              required
+              size={1} // ensures it behaves like a normal dropdown but is scrollable
             >
               <option value="">Select a client</option>
               {clients.length > 0 ? (
@@ -330,7 +365,7 @@ const RecruitmentPage = () => {
           </div>
 
           {/* Basic Fields */}
-          {[
+          {/* {[
             { label: 'Job Title', name: 'job_title', required: true },
             { label: 'Type of Industry', name: 'type_of_industry', required: true },
             { label: 'To Be Join By', name: 'notice_period', required: true },
@@ -352,7 +387,47 @@ const RecruitmentPage = () => {
               />
               {getFieldError(name)}
             </div>
+          ))} */}
+
+
+          {[
+            { label: 'Job Title', name: 'job_title', required: true },
+            { label: 'Type of Industry', name: 'type_of_industry', required: true },
+            { label: 'To Be Join By', name: 'notice_period', required: true },
+            { label: 'Qualification', name: 'qualification', required: true },
+            { label: 'Skills Required', name: 'skills_required', required: true }
+          ].map(({ label, name, required }) => (
+            <div key={name} className="flex flex-col">
+              <label htmlFor={name} className="mb-2 text-sm font-semibold text-gray-700">
+                {label}{required && <span className="text-red-500"> *</span>}
+              </label>
+
+              {name === 'skills_required' ? (
+                <textarea
+                  id={name}
+                  name={name}
+                  value={formData[name]}
+                  onChange={handleChange}
+                  rows={5}
+                  className="border border-gray-300 rounded-md px-4 py-3 text-sm w-full"
+                  required={required}
+                />
+              ) : (
+                <input
+                  type="text"
+                  id={name}
+                  name={name}
+                  value={formData[name]}
+                  onChange={handleChange}
+                  className="border border-gray-300 rounded-md px-4 py-3 text-sm w-full"
+                  required={required}
+                />
+              )}
+
+              {getFieldError(name)}
+            </div>
           ))}
+
 
           {/* Experience */}
           <div className="flex flex-col gap-4 md:col-span-2">

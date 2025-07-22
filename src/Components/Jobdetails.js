@@ -20,7 +20,7 @@ function Jobdetails() {
           const response = await fetch(`https://skilviu.com/backend/api/v1/recruitments/${id}`);
           if (!response.ok) throw new Error('Failed to fetch job details');
           const data = await response.json();
-          
+
           console.log('Fetched job data:', data);
           setJob(data);
         } catch (err) {
@@ -64,13 +64,26 @@ function Jobdetails() {
           />
         </div>
 
-        <Section title="Skills Required">
+        {/* <Section title="Skills Required">
           <ul className="list-disc list-inside space-y-1">
             {job.skills_required?.split(',').map((skill, i) => (
               <li key={i}>{skill.trim()}</li>
             ))}
           </ul>
+        </Section> */}
+
+        <Section title="Skills Required">
+          <ul className="list-disc list-inside space-y-1">
+            {job.skills_required
+              ?.split('.')
+              .map((sentence, i) => sentence.trim())
+              .filter(sentence => sentence.length > 0)
+              .map((sentence, i) => (
+                <li key={i}>{sentence}.</li>
+              ))}
+          </ul>
         </Section>
+
 
         {job.benefit?.trim() && (
           <Section title="Benefits">
