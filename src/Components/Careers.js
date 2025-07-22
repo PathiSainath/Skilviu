@@ -20,9 +20,10 @@ function Careers() {
       });
   }, []);
 
-  const handleApplyNow = () => {
-    navigate('/candidateform');
+  const handleApplyNow = (job) => {
+    navigate('/candidateform', { state: { job_id: job.job_id, job_title: job.job_title } });
   };
+
 
   const handleRefer = (job) => {
     navigate('/refer', { state: { jobTitle: job.job_title } });
@@ -75,11 +76,12 @@ function Careers() {
                     READ MORE
                   </button>
                   <button
-                    onClick={handleApplyNow}
+                    onClick={() => handleApplyNow(job)}  // Pass job here
                     className="bg-green-600 hover:bg-green-800 text-white rounded-xl px-4 py-2 text-sm"
                   >
                     APPLY NOW
                   </button>
+
                   <button
                     onClick={() => handleRefer(job)}
                     className="bg-blue-500 hover:bg-blue-700 text-white rounded-xl px-4 py-2 text-sm"

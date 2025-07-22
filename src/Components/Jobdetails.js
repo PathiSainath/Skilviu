@@ -34,8 +34,9 @@ function Jobdetails() {
   }, [id, location.state]);
 
   const handleApplyNow = () => {
-    navigate('/candidateform');
+    navigate('/candidateform', { state: { job_id: job.job_id, job_title: job.job_title } });
   };
+
 
   if (error) {
     return <div className="p-10 text-center text-red-600">{error}</div>;
