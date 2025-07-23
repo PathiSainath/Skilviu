@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 
 function Clientform_page() {
   const [formData, setFormData] = useState({
-    client_id: '',
     company_name: '',
     website: '',
     email: '',
@@ -60,7 +59,7 @@ function Clientform_page() {
     const newErrors = {};
     
     const requiredFields = [
-      'client_id', 'company_name', 'email', 'phone', 'location', 
+       'company_name', 'email', 'phone', 'location', 
       'gst_number', 'contact_name', 'designation',
       'contact_email', 'contact_phone'
     ];
@@ -136,7 +135,7 @@ function Clientform_page() {
       }
 
       setFormData({
-        client_id: '',
+       
         company_name: '',
         website: '',
         email: '',
