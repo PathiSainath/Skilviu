@@ -8,13 +8,20 @@ function Formedit() {
   const [editingJob, setEditingJob] = useState(null);
   const [jdFile, setJdFile] = useState(null); // ⬅️ Added for new file
 
+
   useEffect(() => {
     const fetchJobs = async () => {
       try {
         const response = await fetch('https://skilviu.com/backend/api/v1/recruitments');
         if (!response.ok) throw new Error('Failed to fetch jobs');
         const data = await response.json();
-        setJobs(data);
+
+        // Add this console to inspect the response:
+        console.log("API response:", data);
+
+        // Adjust based on the actual structure
+        const jobList = Array.isArray(data) ? data : data.data || [];
+        setJobs(jobList);
       } catch (err) {
         console.error(err);
         setError('Failed to load jobs.');
@@ -148,84 +155,6 @@ function Formedit() {
 
       {/* Modal */}
       {editingJob && (
-        // <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
-        //   <div className="bg-white p-6 rounded-lg w-full max-w-3xl max-h-screen overflow-y-auto">
-        //     <h2 className="text-xl font-bold mb-4">Edit Job</h2>
-        //     <form onSubmit={handleUpdate} className="grid grid-cols-2 gap-4">
-        //       {[
-        //         'client_id',
-        //         'client_name',
-        //         'job_title',
-        //         'min_experience',
-        //         'max_experience',
-        //         'preferred_company',
-        //         'type_of_industry',
-        //         'notice_period',
-        //         'benefit',
-        //         'budget',
-        //         'package',
-        //         'qualification',
-        //         'skills_required',
-        //         'job_location',
-        //         'timings',
-        //         'no_of_positions',
-        //         'working_days',
-        //         'diversity_preference',
-        //         'hiring_type',
-        //         'work_mode',
-        //         'interview_process',
-        //         'key_responsibilities',
-        //         'job_description',
-        //       ].map((field) => (
-        //         <div key={field} className="col-span-1">
-        //           <label className="block mb-1 text-sm capitalize">
-        //             {field.replace(/_/g, ' ')}
-        //           </label>
-        //           <input
-        //             type="text"
-        //             name={field}
-        //             value={editingJob[field] || ''}
-        //             onChange={handleModalChange}
-        //             className="w-full p-2 border rounded"
-        //           />
-        //         </div>
-        //       ))}
-
-        //       {/* PDF Upload Field */}
-        //       <div className="col-span-2">
-        //         <label className="block mb-1 text-sm">Upload New JD PDF</label>
-        //         <input
-        //           type="file"
-        //           accept="application/pdf"
-        //           onChange={(e) => setJdFile(e.target.files[0])}
-        //           className="w-full p-2 border rounded"
-        //         />
-        //         {editingJob.jd_document_path && (
-        //           <p className="text-xs mt-1 text-gray-500">
-        //             Current file: {editingJob.jd_document_path.split('/').pop()}
-        //           </p>
-        //         )}
-        //       </div>
-
-        //       <div className="col-span-2 flex justify-end gap-3 mt-4">
-        //         <button
-        //           type="button"
-        //           onClick={closeModal}
-        //           className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
-        //         >
-        //           Cancel
-        //         </button>
-        //         <button
-        //           type="submit"
-        //           className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-        //         >
-        //           Update
-        //         </button>
-        //       </div>
-        //     </form>
-        //   </div>
-        // </div>
-
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
           <div className="bg-white p-6 rounded-lg w-full max-w-3xl max-h-screen overflow-y-auto">
             <h2 className="text-xl font-bold mb-4">Edit Job</h2>

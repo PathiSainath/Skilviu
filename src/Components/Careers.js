@@ -7,11 +7,13 @@ function Careers() {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
+  
   useEffect(() => {
     fetch('https://skilviu.com/backend/api/v1/recruitments')
       .then((res) => res.json())
       .then((data) => {
-        setJobs(data);
+        console.log("API Response:", data); // Helpful debug
+        setJobs(Array.isArray(data) ? data : data.data || []); // Robust fallback
         setLoading(false);
       })
       .catch((error) => {
@@ -19,6 +21,7 @@ function Careers() {
         setLoading(false);
       });
   }, []);
+
 
   const handleApplyNow = (job) => {
     navigate('/candidateform', { state: { job_id: job.job_id, job_title: job.job_title } });
