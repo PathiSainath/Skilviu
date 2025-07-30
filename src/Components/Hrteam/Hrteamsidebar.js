@@ -30,14 +30,6 @@ const Hrteamsidebar = () => {
             <NotebookText className="mr-2 w-4 h-4" />
             Candidate Form
           </NavLink>
-          {/* <NavLink to="/Hrteamdashboard/add-candidate" className={navItemClass}>
-            <UserPlus className="mr-2 w-4 h-4" />
-            Add Candidate
-          </NavLink>
-          <NavLink to="/Hrteamdashboard/interviews" className={navItemClass}>
-            <CalendarCheck className="mr-2 w-4 h-4" />
-            Interviews
-          </NavLink> */}
           <NavLink to="/Hrteamdashboard/candidatestatus" className={navItemClass}>
             <FileText className="mr-2 w-4 h-4" />
             Candidate Status
