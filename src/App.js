@@ -68,6 +68,7 @@ import Disclaimer from './Components/Disclaimer';
 import Positions from './Components/Hrteam/Positions';
 import Clientformedit from './Components/Businessdeveloper/Clientformedit';
 import Scams from './Components/Scams';
+import TaskAssign from './Components/Admin/Taskassign';
 
 
 function App() {
@@ -128,6 +129,7 @@ function MainLayout() {
         <Route path="/admindashboard" element={<AdmindashboardLayout />}>
           <Route index element={<AdminDashboardHome />} />
           <Route path="candidateform-page" element={<Candidateform_page />} />
+          <Route path='task-assign' element={<TaskAssign />} />
         </Route>
 
         {/* Business Dashboard */}

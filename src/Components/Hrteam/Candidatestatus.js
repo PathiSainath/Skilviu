@@ -16,6 +16,9 @@
 //   const [showTrackerModal, setShowTrackerModal] = useState(false);
 //   const [selectedCandidate, setSelectedCandidate] = useState(null);
 
+//   // Define process stages order for enforcement
+//   const orderedStages = ['screening', 'hr_interview', 'client_cv_review', 'client_interview', 'offer_letter'];
+
 //   // ========================= DATA FETCHING =========================
 //   useEffect(() => {
 //     const fetchAll = async () => {
@@ -147,42 +150,37 @@
 
 //   // ========================= STATUS HELPERS =========================
 //   const getCurrentProcessStatus = (candidate) => {
-//     const stages = [
-//       { label: 'Screening', key: 'screening' },
-//       { label: 'HR Interview', key: 'hr_interview' },
-//       { label: 'Client CV Review', key: 'client_cv_review' },
-//       { label: 'Client Interview', key: 'client_interview' },
-//       { label: 'Offer Letter', key: 'offer_letter' },
-//     ];
+//     if (!candidate.process_stages) return 'Pending: Screening';
 
 //     // Check if rejected
-//     if (candidate.process_stages?.rejected === 'completed') {
-//       return 'Rejected';
-//     }
+//     if (candidate.process_stages.rejected === 'rejected') return 'Rejected';
 
+//     // Count completed stages in order
 //     let lastCompleted = -1;
-//     stages.forEach((stage, index) => {
-//       const stageStatus = candidate.process_stages?.[stage.key];
-//       if (stageStatus === 'completed') {
-//         lastCompleted = index;
+//     for (let i = 0; i < orderedStages.length; i++) {
+//       if (candidate.process_stages[orderedStages[i]] === 'completed') {
+//         lastCompleted = i;
+//       } else {
+//         break; // Stop at first non-completed stage
 //       }
-//     });
-
-//     if (lastCompleted === stages.length - 1) {
-//       return 'Process Complete';
-//     } else if (lastCompleted >= 0) {
-//       return `Pending: ${stages[lastCompleted + 1].label}`;
-//     } else {
-//       return 'Pending: Screening';
 //     }
+
+//     if (lastCompleted === orderedStages.length - 1) return 'Process Complete';
+//     if (lastCompleted >= 0) {
+//       const nextStage = orderedStages[lastCompleted + 1];
+//       const stageLabel = nextStage.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+//       return `Pending: ${stageLabel}`;
+//     }
+//     return 'Pending: Screening';
+//   };
+
+//   // Helper: disable Select button if any process stage is started
+//   const hasProcessStarted = (candidate) => {
+//     if (!candidate.process_stages) return false;
+//     return Object.values(candidate.process_stages).some(val => val && val.length > 0);
 //   };
 
 //   // ========================= API METHODS =========================
-
-//   /**
-//    * Creates a process tracker for a candidate if it doesn't exist
-//    * @param {number} candidateId - The candidate ID
-//    */
 //   const createProcessTrackerIfNotExists = async (candidateId) => {
 //     try {
 //       console.log(`🔄 Checking if tracker exists for candidate ${candidateId}`);
@@ -224,11 +222,6 @@
 //     }
 //   };
 
-//   /**
-//    * Updates candidate status and creates process tracker if needed
-//    * @param {Object} candidate - The candidate object
-//    * @param {string} newStatus - The new status to set
-//    */
 //   const handleStatusChange = async (candidate, newStatus) => {
 //     const candidateId = candidate.candidate_id || candidate.id;
 
@@ -284,20 +277,11 @@
 //     }
 //   };
 
-//   /**
-//    * Updates a specific process stage for a candidate
-//    * @param {number} candidateId - The candidate ID
-//    * @param {string} stage - The stage to update
-//    * @param {string} status - The status value (always 'completed')
-//    */
 //   const handleProcessStageChange = async (candidateId, stage, status) => {
 //     try {
-//       console.log(`🔄 Updating stage ${stage} for candidate ${candidateId} to completed`);
+//       console.log(`🔄 Updating stage ${stage} for candidate ${candidateId} to ${status}`);
       
-//       // Send only the field that's being updated (works with your backend's 'sometimes' validation)
-//       const updateData = {
-//         [stage]: 'completed'
-//       };
+//       const updateData = { [stage]: status };
 
 //       const response = await fetch(`https://skilviu.com/backend/api/v1/updateprocess-tracker/${candidateId}`, {
 //         method: 'PUT',
@@ -316,7 +300,6 @@
 //       const result = await response.json();
 //       console.log(`✅ Stage update successful:`, result);
 
-//       // Use the fresh data from backend response to ensure consistency
 //       const freshStages = result.data;
       
 //       const updateProcessStage = (candidatesList) =>
@@ -360,7 +343,7 @@
 //         },
 //       }));
 
-//       console.log(`✅ Process stage ${stage} marked as completed for candidate ${candidateId}`);
+//       console.log(`✅ Process stage ${stage} marked as ${status} for candidate ${candidateId}`);
       
 //     } catch (err) {
 //       console.error('Failed to update tracker:', err);
@@ -607,6 +590,7 @@
 //                 {positionCandidates.map((candidate) => {
 //                   const candidateKey = candidate.candidate_id || candidate.id;
 //                   const isSelected = candidate.status === 'Selected';
+//                   const processStarted = hasProcessStarted(candidate);
 
 //                   return (
 //                     <div
@@ -627,8 +611,8 @@
 //                         <div className="flex flex-col items-end gap-2">
 //                           <button
 //                             onClick={() => handleStatusChange(candidate, 'Selected')}
-//                             disabled={isSelected}
-//                             className={`px-4 py-2 text-sm rounded-md font-medium transition-colors ${isSelected
+//                             disabled={isSelected || processStarted}
+//                             className={`px-4 py-2 text-sm rounded-md font-medium transition-colors ${isSelected || processStarted
 //                                 ? 'bg-green-100 text-green-800 cursor-default'
 //                                 : 'bg-blue-600 text-white hover:bg-blue-700'
 //                               }`}
@@ -636,7 +620,7 @@
 //                             {isSelected ? '✓ Selected' : 'Select'}
 //                           </button>
 
-//                           {isSelected && (
+//                           {(isSelected || processStarted) && (
 //                             <div className="text-xs text-center">
 //                               <div className="mb-1 font-medium text-gray-700">Current Status:</div>
 //                               <div className={`font-medium ${
@@ -751,14 +735,37 @@
 //                   { label: 'Client Interview', key: 'client_interview', color: 'purple', icon: '🤝' },
 //                   { label: 'Offer Letter', key: 'offer_letter', color: 'red', icon: '📝' },
 //                   { label: 'Rejected', key: 'rejected', color: 'gray', icon: '🚫' },
-//                 ].map((step) => {
+//                 ].map((step, idx) => {
 //                   const currentValue = selectedCandidate.process_stages?.[step.key];
-//                   const isCompleted = currentValue === 'completed';
+//                   const isRejected = selectedCandidate.process_stages?.rejected === 'rejected';
+//                   const offerLetterDone = selectedCandidate.process_stages?.offer_letter === 'completed';
 //                   const candidateId = selectedCandidate.candidate_id || selectedCandidate.id;
+
+//                   // Determine if checkbox is checked
+//                   const isChecked = (step.key === 'rejected' && isRejected) || 
+//                                    (step.key !== 'rejected' && currentValue === 'completed');
+
+//                   // Determine if checkbox can be clicked (ordered progression logic)
+//                   let canCheck = false;
+//                   if (isRejected || offerLetterDone) {
+//                     // If rejected or process complete, only allow unchecking rejected
+//                     canCheck = step.key === 'rejected' && isChecked;
+//                   } else if (step.key === 'rejected') {
+//                     // Can always reject if not already completed offer letter
+//                     canCheck = true;
+//                   } else {
+//                     // For normal stages, check if previous stage is completed or if it's the first stage
+//                     if (idx === 0) {
+//                       canCheck = true; // First stage always available
+//                     } else {
+//                       const prevStageKey = orderedStages[idx - 1];
+//                       canCheck = selectedCandidate.process_stages?.[prevStageKey] === 'completed';
+//                     }
+//                   }
 
 //                   return (
 //                     <div key={step.key} className={`p-4 border-2 rounded-lg transition-all ${
-//                       isCompleted 
+//                       isChecked 
 //                         ? (step.key === 'rejected' ? 'border-red-500 bg-red-50' : 'border-green-500 bg-green-50')
 //                         : 'border-gray-200 bg-gray-50 hover:border-gray-300'
 //                     }`}>
@@ -773,25 +780,35 @@
 //                         <label className="flex items-center gap-2 cursor-pointer">
 //                           <input
 //                             type="checkbox"
-//                             checked={isCompleted}
+//                             checked={isChecked}
+//                             disabled={!canCheck}
 //                             onChange={(e) => {
 //                               if (e.target.checked) {
-//                                 handleProcessStageChange(candidateId, step.key, 'rejected');
+//                                 if (step.key === 'rejected') {
+//                                   handleProcessStageChange(candidateId, step.key, 'rejected');
+//                                 } else {
+//                                   handleProcessStageChange(candidateId, step.key, 'completed');
+//                                 }
+//                               } else {
+//                                 // Clear the stage status when unchecked
+//                                 handleProcessStageChange(candidateId, step.key, '');
 //                               }
 //                             }}
-//                             className="w-5 h-5 text-green-600 rounded focus:ring-green-500"
+//                             className={`w-5 h-5 rounded focus:ring-500 ${
+//                               step.key === 'rejected' ? 'text-red-600' : 'text-green-600'
+//                             }`}
 //                           />
 //                           <span className={`text-sm font-medium ${
-//                             isCompleted 
+//                             isChecked 
 //                               ? (step.key === 'rejected' ? 'text-red-700' : 'text-green-700')
 //                               : 'text-gray-600'
 //                           }`}>
-//                             {isCompleted ? 'Completed ✓' : 'Mark Complete'}
+//                             {isChecked ? (step.key === 'rejected' ? 'Rejected' : 'Completed ✓') : 'Mark Complete'}
 //                           </span>
 //                         </label>
 //                       </div>
                       
-//                       {isCompleted && (
+//                       {isChecked && (
 //                         <div className={`mt-2 text-xs text-center ${
 //                           step.key === 'rejected' ? 'text-red-600' : 'text-green-600'
 //                         }`}>
@@ -820,8 +837,6 @@
 // }
 
 // export default Candidatestatus;
-
-
 
 
 
@@ -977,6 +992,24 @@ function Candidatestatus() {
     });
   };
 
+  // ========================= NAVIGATION HELPER =========================
+  const handleAddCandidate = () => {
+    if (filteredData && filteredData.recruitment) {
+      // Navigate to candidate form with job details pre-filled
+      navigate('/hrteamdashboard/candidateform-page', {
+        state: {
+          preSelectedJobId: filteredData.recruitment.job_id || filteredData.recruitment.id,
+          jobTitle: filteredData.jobTitle,
+          clientName: filteredData.clientName,
+          location: filteredData.recruitment.location
+        }
+      });
+    } else {
+      // Fallback navigation without pre-selection
+      navigate('/hrteamdashboard/candidateform-page');
+    }
+  };
+
   // ========================= STATUS HELPERS =========================
   const getCurrentProcessStatus = (candidate) => {
     if (!candidate.process_stages) return 'Pending: Screening';
@@ -1013,12 +1046,12 @@ function Candidatestatus() {
   const createProcessTrackerIfNotExists = async (candidateId) => {
     try {
       console.log(`🔄 Checking if tracker exists for candidate ${candidateId}`);
-      
+
       const checkResponse = await fetch(`https://skilviu.com/backend/api/v1/process-tracker/${candidateId}`);
-      
+
       if (checkResponse.status === 404) {
         console.log(`📝 Creating new process tracker for candidate ${candidateId}`);
-        
+
         const createResponse = await fetch('https://skilviu.com/backend/api/v1/process-tracker', {
           method: 'POST',
           headers: {
@@ -1041,11 +1074,11 @@ function Candidatestatus() {
         }
 
         console.log(`✅ Process tracker created/exists for candidate ${candidateId}`);
-        
+
       } else if (checkResponse.ok) {
         console.log(`✅ Process tracker already exists for candidate ${candidateId}`);
       }
-      
+
     } catch (error) {
       console.error('Error with process tracker:', error);
     }
@@ -1061,7 +1094,7 @@ function Candidatestatus() {
 
     try {
       console.log(`🔄 Updating candidate ${candidateId} status to ${newStatus}`);
-      
+
       const response = await fetch(`https://skilviu.com/backend/api/v1/candidates/${candidateId}`, {
         method: 'PUT',
         headers: {
@@ -1097,9 +1130,9 @@ function Candidatestatus() {
         setSelectedCandidate({ ...candidate, status: newStatus });
         setShowTrackerModal(true);
       }
-      
+
       console.log(`✅ Candidate ${candidateId} status updated to ${newStatus}`);
-      
+
     } catch (error) {
       console.error('Failed to update status:', error);
       setError(`Failed to update candidate status: ${error.message}`);
@@ -1109,7 +1142,7 @@ function Candidatestatus() {
   const handleProcessStageChange = async (candidateId, stage, status) => {
     try {
       console.log(`🔄 Updating stage ${stage} for candidate ${candidateId} to ${status}`);
-      
+
       const updateData = { [stage]: status };
 
       const response = await fetch(`https://skilviu.com/backend/api/v1/updateprocess-tracker/${candidateId}`, {
@@ -1130,7 +1163,7 @@ function Candidatestatus() {
       console.log(`✅ Stage update successful:`, result);
 
       const freshStages = result.data;
-      
+
       const updateProcessStage = (candidatesList) =>
         candidatesList.map((c) => {
           const cId = c.candidate_id || c.id;
@@ -1173,7 +1206,7 @@ function Candidatestatus() {
       }));
 
       console.log(`✅ Process stage ${stage} marked as ${status} for candidate ${candidateId}`);
-      
+
     } catch (err) {
       console.error('Failed to update tracker:', err);
       setError(`Failed to update process tracker: ${err.message}`);
@@ -1194,8 +1227,8 @@ function Candidatestatus() {
       <div className="p-6 max-w-7xl mx-auto">
         <div className="bg-red-50 border border-red-200 rounded-lg p-4">
           <p className="text-red-600">{error}</p>
-          <button 
-            onClick={() => setError('')} 
+          <button
+            onClick={() => setError('')}
             className="mt-2 px-3 py-1 bg-red-600 text-white text-sm rounded hover:bg-red-700"
           >
             Dismiss
@@ -1253,12 +1286,20 @@ function Candidatestatus() {
             </div>
           </div>
 
-          <button
-            onClick={() => navigate('/hrteamdashboard/positions')}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
-          >
-            Go Back to Positions
-          </button>
+          <div className="flex gap-4">
+            <button
+              onClick={() => navigate('/hrteamdashboard/positions')}
+              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+            >
+              Go Back to Positions
+            </button>
+            <button
+              onClick={handleAddCandidate}
+              className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700"
+            >
+              Add New Candidate
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -1290,6 +1331,12 @@ function Candidatestatus() {
               <div className="text-sm font-medium">Applications</div>
               <div className="text-xl font-bold">{positionCandidates.length}</div>
             </div>
+            <button 
+              onClick={handleAddCandidate}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+            >
+              Add Candidate
+            </button>
           </div>
         </div>
       </div>
@@ -1406,6 +1453,12 @@ function Candidatestatus() {
                 <Users className="w-12 h-12 text-gray-300 mx-auto mb-4" />
                 <div>
                   <p className="mb-2">No candidates found for this position.</p>
+                  <button
+                    onClick={handleAddCandidate}
+                    className="mt-4 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+                  >
+                    Add First Candidate
+                  </button>
                   {filteredData.debugInfo && (
                     <div className="text-xs text-gray-400 bg-gray-50 p-3 rounded-lg mt-4">
                       <p><strong>Debug:</strong> Searched for job_id in [{filteredData.debugInfo.matchingRecruitmentIds?.join(', ')}]</p>
@@ -1425,8 +1478,8 @@ function Candidatestatus() {
                     <div
                       key={candidateKey}
                       className={`border rounded-lg p-4 transition-all ${isSelected
-                          ? 'border-green-200 bg-green-50'
-                          : 'border-gray-200 hover:border-blue-300 hover:shadow-sm'
+                        ? 'border-green-200 bg-green-50'
+                        : 'border-gray-200 hover:border-blue-300 hover:shadow-sm'
                         }`}
                     >
                       {/* Candidate Header */}
@@ -1442,8 +1495,8 @@ function Candidatestatus() {
                             onClick={() => handleStatusChange(candidate, 'Selected')}
                             disabled={isSelected || processStarted}
                             className={`px-4 py-2 text-sm rounded-md font-medium transition-colors ${isSelected || processStarted
-                                ? 'bg-green-100 text-green-800 cursor-default'
-                                : 'bg-blue-600 text-white hover:bg-blue-700'
+                              ? 'bg-green-100 text-green-800 cursor-default'
+                              : 'bg-blue-600 text-white hover:bg-blue-700'
                               }`}
                           >
                             {isSelected ? '✓ Selected' : 'Select'}
@@ -1452,11 +1505,10 @@ function Candidatestatus() {
                           {(isSelected || processStarted) && (
                             <div className="text-xs text-center">
                               <div className="mb-1 font-medium text-gray-700">Current Status:</div>
-                              <div className={`font-medium ${
-                                getCurrentProcessStatus(candidate) === 'Rejected' 
-                                  ? 'text-red-700' 
+                              <div className={`font-medium ${getCurrentProcessStatus(candidate) === 'Rejected'
+                                  ? 'text-red-700'
                                   : 'text-purple-700'
-                              }`}>
+                                }`}>
                                 {getCurrentProcessStatus(candidate)}
                               </div>
                               <button
@@ -1571,8 +1623,8 @@ function Candidatestatus() {
                   const candidateId = selectedCandidate.candidate_id || selectedCandidate.id;
 
                   // Determine if checkbox is checked
-                  const isChecked = (step.key === 'rejected' && isRejected) || 
-                                   (step.key !== 'rejected' && currentValue === 'completed');
+                  const isChecked = (step.key === 'rejected' && isRejected) ||
+                    (step.key !== 'rejected' && currentValue === 'completed');
 
                   // Determine if checkbox can be clicked (ordered progression logic)
                   let canCheck = false;
@@ -1593,18 +1645,17 @@ function Candidatestatus() {
                   }
 
                   return (
-                    <div key={step.key} className={`p-4 border-2 rounded-lg transition-all ${
-                      isChecked 
+                    <div key={step.key} className={`p-4 border-2 rounded-lg transition-all ${isChecked
                         ? (step.key === 'rejected' ? 'border-red-500 bg-red-50' : 'border-green-500 bg-green-50')
                         : 'border-gray-200 bg-gray-50 hover:border-gray-300'
-                    }`}>
+                      }`}>
                       <div className="text-center mb-3">
                         <div className="text-2xl mb-2">{step.icon}</div>
                         <div className="text-sm font-medium text-gray-800">
                           {step.label}
                         </div>
                       </div>
-                      
+
                       <div className="flex justify-center">
                         <label className="flex items-center gap-2 cursor-pointer">
                           <input
@@ -1623,24 +1674,21 @@ function Candidatestatus() {
                                 handleProcessStageChange(candidateId, step.key, '');
                               }
                             }}
-                            className={`w-5 h-5 rounded focus:ring-500 ${
-                              step.key === 'rejected' ? 'text-red-600' : 'text-green-600'
-                            }`}
+                            className={`w-5 h-5 rounded focus:ring-500 ${step.key === 'rejected' ? 'text-red-600' : 'text-green-600'
+                              }`}
                           />
-                          <span className={`text-sm font-medium ${
-                            isChecked 
+                          <span className={`text-sm font-medium ${isChecked
                               ? (step.key === 'rejected' ? 'text-red-700' : 'text-green-700')
                               : 'text-gray-600'
-                          }`}>
+                            }`}>
                             {isChecked ? (step.key === 'rejected' ? 'Rejected' : 'Completed ✓') : 'Mark Complete'}
                           </span>
                         </label>
                       </div>
-                      
+
                       {isChecked && (
-                        <div className={`mt-2 text-xs text-center ${
-                          step.key === 'rejected' ? 'text-red-600' : 'text-green-600'
-                        }`}>
+                        <div className={`mt-2 text-xs text-center ${step.key === 'rejected' ? 'text-red-600' : 'text-green-600'
+                          }`}>
                           {step.key === 'rejected' ? '❌ Rejected' : '✅ Stage Complete'}
                         </div>
                       )}
