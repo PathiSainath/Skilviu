@@ -585,7 +585,7 @@ function TaskAssign() {
           user_id: task.user_id,
           job_id: task.job_id
         }));
-        
+
         setTasks(transformedTasks);
       } else {
         console.log('No tasks found or invalid response format');
@@ -621,12 +621,12 @@ function TaskAssign() {
         { id: 1, user_role: 'Admin', username: 'naveen.indla@skilviu.com', },
         { id: 2, user_role: 'Bdm', username: 'manaswi.v@skilviu.com', },
         { id: 3, user_role: 'Hrteam', username: 'naveena.p@skilviu.com', },
-        { id: 4, user_role: 'Admin', username: 'lokesh.ch@skilviu.com',  },
+        { id: 4, user_role: 'Admin', username: 'lokesh.ch@skilviu.com', },
         { id: 5, user_role: 'Hrteam', username: 'sumeera.k@skilviu.com', },
         { id: 6, user_role: 'Hrteam', username: 'sravani.n@skilviu.com', },
-        { id: 7, user_role: 'Hrteam', username: 'sravan.s@skilviu.com',  },
-        { id: 8, user_role: 'Admin', username: 'premnath@skilviu.com',   },
-        { id: 9, user_role: 'Admin', username: 'jaya@skilviu.com',  }
+        { id: 7, user_role: 'Hrteam', username: 'sravan.s@skilviu.com', },
+        { id: 8, user_role: 'Admin', username: 'premnath@skilviu.com', },
+        { id: 9, user_role: 'Admin', username: 'jaya@skilviu.com', }
       ]);
       // setErrorMessage('ℹ️ Using demo data - Connect to API to load actual users');
     }
@@ -1012,7 +1012,7 @@ function TaskAssign() {
                 className={`flex-1 px-6 py-3 border-none rounded-lg text-sm font-semibold text-white bg-gradient-to-r from-indigo-500 to-purple-600 transition-opacity ${(loading || !selectedUser)
                   ? 'opacity-60 cursor-not-allowed'
                   : 'hover:opacity-90 cursor-pointer'
-                }`}
+                  }`}
               >
                 {loading ? 'Assigning Task...' : 'Assign Recruitment Task'}
               </button>
@@ -1041,8 +1041,8 @@ function TaskAssign() {
               {tasksLoading ? 'Refreshing...' : 'Refresh'}
             </button>
           </div>
-          
-          {/* UPDATED: Added scrollable container */}
+
+          {/* UPDATED: Latest tasks at top with NEW badge */}
           <div className="max-h-[600px] overflow-y-auto pr-2">
             {tasksLoading ? (
               <div className="text-center py-10">
@@ -1054,54 +1054,77 @@ function TaskAssign() {
                 No recruitment tasks assigned yet
               </p>
             ) : (
-              tasks.slice(-10).reverse().map(task => {
-                const userRole = getUserRoleByUserId(task.user_id);
-                return (
-                  <div key={`task-${task.id}`} className="border border-gray-200 rounded-lg p-4 bg-gray-50 mb-4 hover:shadow-md transition-shadow">
-                    <div className="flex justify-between items-center mb-3">
-                      <h4 className="text-gray-800 font-semibold text-lg">
-                        {task.title}
-                      </h4>
-                      <span
-                        className={`px-2 py-1 rounded text-xs font-semibold ${getPriorityColorClasses(task.priority)}`}
-                      >
-                        {task.priority ? task.priority.toUpperCase() : 'MEDIUM'}
-                      </span>
-                    </div>
-                    <p className="text-sm text-gray-600 mb-1">
-                      <strong>Assigned to:</strong> {task.assigned_to}
-                    </p>
-                    <p className="text-sm text-gray-600 mb-1">
-                      <strong>Team:</strong>
-                      <span
-                        className={`inline-block px-2 py-1 rounded text-white text-xs font-semibold ml-2 ${getRoleColorClasses(userRole)}`}
-                      >
-                        {getRoleDisplayName(userRole)}
-                      </span>
-                    </p>
-                    <p className="text-sm text-gray-600 mb-1">
-                      <strong>Description:</strong> {task.description || task.message}
-                    </p>
-                    <p className="text-sm text-gray-600 mb-1">
-                      <strong>Deadline:</strong> {task.deadline ? new Date(task.deadline).toLocaleDateString() : 'No deadline'}
-                    </p>
-                    {task.jobDetails && (
-                      <div className="bg-gray-200 p-2 rounded mt-2">
-                        <p className="text-xs mb-1">
-                          <strong>Job:</strong> {task.jobDetails.job_title}
-                        </p>
-                        {/* REMOVED: Client name line */}
-                        <p className="text-xs">
-                          <strong>Location:</strong> {task.jobDetails.job_location || 'N/A'}
-                        </p>
+              // ✅ FIXED: Sort by creation date descending (newest first), then take 10
+              tasks
+                .sort((a, b) => {
+                  const dateA = new Date(a.createdAt || a.created_at || 0);
+                  const dateB = new Date(b.createdAt || b.created_at || 0);
+                  return dateB - dateA; // Newest first
+                })
+                .slice(0, 10)
+                .map(task => {
+                  const userRole = getUserRoleByUserId(task.user_id);
+                  const isRecent = (() => {
+                    if (!task.createdAt && !task.created_at) return false;
+                    const taskDate = new Date(task.createdAt || task.created_at);
+                    const now = new Date();
+                    const diffInMinutes = (now - taskDate) / (1000 * 60);
+                    return diffInMinutes <= 30; // Recent if within 30 minutes
+                  })();
+
+                  return (
+                    <div key={`task-${task.id}`} className="border border-gray-200 rounded-lg p-4 bg-gray-50 mb-4 hover:shadow-md transition-shadow">
+                      <div className="flex justify-between items-center mb-3">
+                        <div className="flex items-center gap-2">
+                          <h4 className="text-gray-800 font-semibold text-lg">
+                            {task.title}
+                          </h4>
+                          {/* ✅ NEW badge for recent tasks */}
+                          {isRecent && (
+                            <span className="bg-green-500 text-white px-2 py-1 rounded-full text-xs font-bold">
+                              🆕 NEW
+                            </span>
+                          )}
+                        </div>
+                        <span
+                          className={`px-2 py-1 rounded text-xs font-semibold ${getPriorityColorClasses(task.priority)}`}
+                        >
+                          {task.priority ? task.priority.toUpperCase() : 'MEDIUM'}
+                        </span>
                       </div>
-                    )}
-                    <p className="text-xs text-gray-400 mt-2">
-                      Created: {task.createdAt ? new Date(task.createdAt).toLocaleString() : 'N/A'}
-                    </p>
-                  </div>
-                );
-              })
+                      <p className="text-sm text-gray-600 mb-1">
+                        <strong>Assigned to:</strong> {task.assigned_to}
+                      </p>
+                      <p className="text-sm text-gray-600 mb-1">
+                        <strong>Team:</strong>
+                        <span
+                          className={`inline-block px-2 py-1 rounded text-white text-xs font-semibold ml-2 ${getRoleColorClasses(userRole)}`}
+                        >
+                          {getRoleDisplayName(userRole)}
+                        </span>
+                      </p>
+                      <p className="text-sm text-gray-600 mb-1">
+                        <strong>Description:</strong> {task.description || task.message}
+                      </p>
+                      <p className="text-sm text-gray-600 mb-1">
+                        <strong>Deadline:</strong> {task.deadline ? new Date(task.deadline).toLocaleDateString() : 'No deadline'}
+                      </p>
+                      {task.jobDetails && (
+                        <div className="bg-gray-200 p-2 rounded mt-2">
+                          <p className="text-xs mb-1">
+                            <strong>Job:</strong> {task.jobDetails.job_title}
+                          </p>
+                          <p className="text-xs">
+                            <strong>Location:</strong> {task.jobDetails.job_location || 'N/A'}
+                          </p>
+                        </div>
+                      )}
+                      <p className="text-xs text-gray-400 mt-2">
+                        Created: {task.createdAt ? new Date(task.createdAt).toLocaleString() : 'N/A'}
+                      </p>
+                    </div>
+                  );
+                })
             )}
           </div>
         </div>

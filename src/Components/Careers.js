@@ -7,7 +7,7 @@
 //   const [loading, setLoading] = useState(true);
 //   const navigate = useNavigate();
 
-  
+
 //   useEffect(() => {
 //     fetch('https://skilviu.com/backend/api/v1/recruitments')
 //       .then((res) => res.json())
@@ -135,9 +135,20 @@ function Careers() {
     navigate('/candidateform', { state: { job_id: job.job_id, job_title: job.job_title } });
   };
 
+  // const handleRefer = (job) => {
+  //   navigate('/refer/:jobId', { state: { jobTitle: job.job_title } });
+  // };
   const handleRefer = (job) => {
-    navigate('/refer', { state: { jobTitle: job.job_title } });
+    navigate(`/refer/${job.job_id}`, {
+      state: {
+        job_id: job.job_id,
+        job_title: job.job_title,
+        job_location: job.job_location,
+        client_name: job.client_name
+      }
+    });
   };
+
 
   // Pagination Logic
   const indexOfLastJob = currentPage * jobsPerPage;

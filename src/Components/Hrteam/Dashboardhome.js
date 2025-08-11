@@ -1,218 +1,3 @@
-// import React, { useEffect, useState } from 'react';
-// import { Users, ClipboardList, FileSignature } from 'lucide-react';
-// import Positions from './Positions';
-
-// const Dashboardhome = () => {
-//   const [stats, setStats] = useState({
-//     applications: 0,
-//     interviews: 0,
-//     candidates: 0,
-//     clientForms: 0,
-//     totalPositions: 0,
-//   });
-//   const [loading, setLoading] = useState(true);
-//   const [error, setError] = useState('');
-//   const [showPositions, setShowPositions] = useState(false);
-
-//   useEffect(() => {
-//     const fetchAllStats = async () => {
-//       try {
-//         setLoading(true);
-//         setError('');
-
-//         const countEndpoints = [
-//           { url: 'https://skilviu.com/backend/api/v1/recruitments/count', key: 'applications' },
-//           { url: 'https://skilviu.com/backend/api/v1/recruitments/interviews/count', key: 'interviews' },
-//           { url: 'https://skilviu.com/backend/api/v1/candidates/count', key: 'candidates' },
-//           { url: 'https://skilviu.com/backend/api/v1/clientforms/count', key: 'clientForms' }
-//         ];
-
-//         const countResults = await Promise.all(
-//           countEndpoints.map(async ({ url, key }) => {
-//             try {
-//               const response = await fetch(url);
-//               if (!response.ok) throw new Error(`HTTP ${response.status}`);
-//               const data = await response.json();
-//               return { key, count: data.count || 0 };
-//             } catch (error) {
-//               console.warn(`Count endpoint ${url} failed:`, error);
-//               return { key, count: null };
-//             }
-//           })
-//         );
-
-//         const hasFailedCounts = countResults.some(result => result.count === null);
-
-//         if (hasFailedCounts) {
-//           await fetchFullDataAsFallback();
-//         } else {
-//           const newStats = {};
-//           countResults.forEach(({ key, count }) => {
-//             newStats[key] = count;
-//           });
-
-//           // ✅ Fixed: Calculate total positions properly
-//           const recruitmentRes = await fetch('https://skilviu.com/backend/api/v1/recruitments');
-//           const recruitmentJson = await recruitmentRes.json();
-//           const recruitments = Array.isArray(recruitmentJson) ? recruitmentJson :
-//             recruitmentJson?.data && Array.isArray(recruitmentJson.data) ? recruitmentJson.data : [];
-
-//           // Sum up all no_of_positions values
-//           const totalPositionsCount = recruitments.reduce((sum, recruitment) => {
-//             const positionCount = Number(recruitment.no_of_positions) || 1;
-//             return sum + positionCount;
-//           }, 0);
-
-//           newStats.totalPositions = totalPositionsCount;
-//           setStats(newStats);
-//         }
-//       } catch (error) {
-//         console.error('Failed to fetch dashboard stats:', error);
-//         setError('Failed to load dashboard statistics');
-//         await fetchFullDataAsFallback();
-//       } finally {
-//         setLoading(false);
-//       }
-//     };
-
-//     const fetchFullDataAsFallback = async () => {
-//       try {
-//         const endpoints = [
-//           'https://skilviu.com/backend/api/v1/recruitments',
-//           'https://skilviu.com/backend/api/v1/clientforms',
-//           'https://skilviu.com/backend/api/v1/candidates'
-//         ];
-
-//         const [recruitmentsData, clientFormsData, candidatesData] = await Promise.all(
-//           endpoints.map(async (url) => {
-//             try {
-//               const response = await fetch(url);
-//               if (!response.ok) throw new Error(`HTTP ${response.status}`);
-//               return await response.json();
-//             } catch (error) {
-//               console.warn(`Endpoint ${url} failed:`, error);
-//               return null;
-//             }
-//           })
-//         );
-
-//         const recruitments = Array.isArray(recruitmentsData) ? recruitmentsData :
-//           recruitmentsData?.data && Array.isArray(recruitmentsData.data) ? recruitmentsData.data : [];
-
-//         const clientForms = Array.isArray(clientFormsData) ? clientFormsData :
-//           clientFormsData?.data?.data?.data && Array.isArray(clientFormsData.data.data.data) ? clientFormsData.data.data.data :
-//           clientFormsData?.data && Array.isArray(clientFormsData.data) ? clientFormsData.data : [];
-
-//         const candidates = Array.isArray(candidatesData) ? candidatesData :
-//           candidatesData?.data && Array.isArray(candidatesData.data) ? candidatesData.data : [];
-
-//         const interviewsCount = recruitments.filter(r => r?.interviewScheduled).length;
-        
-//         // ✅ Fixed: Sum up all positions properly in fallback
-//         const totalPositionsCount = recruitments.reduce((sum, recruitment) => {
-//           const positionCount = Number(recruitment.no_of_positions) || 1;
-//           return sum + positionCount;
-//         }, 0);
-
-//         setStats({
-//           applications: recruitments.length,
-//           interviews: interviewsCount,
-//           candidates: candidates.length,
-//           clientForms: clientForms.length,
-//           totalPositions: totalPositionsCount,
-//         });
-//       } catch (fallbackError) {
-//         console.error('Fallback data fetch failed:', fallbackError);
-//         setError('Unable to load dashboard statistics. Please try refreshing the page.');
-//       }
-//     };
-
-//     fetchAllStats();
-//   }, []);
-
-//   if (loading) {
-//     return (
-//       <div className="bg-white rounded-xl shadow p-8">
-//         <div className="text-center py-10 text-gray-600">Loading dashboard statistics...</div>
-//       </div>
-//     );
-//   }
-
-//   return (
-//     <div className="bg-white rounded-xl shadow p-4 sm:p-6 md:p-8">
-//       <h1 className="text-3xl font-bold text-gray-800 mb-8">
-//         Welcome to the HR Team Dashboard
-//       </h1>
-
-//       {error && (
-//         <div className="mb-6 p-4 bg-red-100 text-red-700 rounded-lg">
-//           {error}
-//         </div>
-//       )}
-
-//       <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 sm:gap-6 mb-10">
-//         <OverviewCard
-//           icon={<ClipboardList className="w-6 h-6" />}
-//           label="No. of Clients"
-//           value={stats.clientForms}
-//           colorClass="text-purple-600 bg-purple-100"
-//           onClick={() => console.log('Clients card clicked')}
-//         />
-//         <OverviewCard
-//           icon={<Users className="w-6 h-6" />}
-//           label="No. of Candidates"
-//           value={stats.candidates}
-//           colorClass="text-green-600 bg-green-100"
-//           onClick={() => console.log('Candidates card clicked')}
-//         />
-//         <OverviewCard
-//           icon={<FileSignature className="w-6 h-6" />}
-//           label="No. of Positions"
-//           value={stats.totalPositions}
-//           colorClass="text-pink-600 bg-pink-100"
-//           onClick={() => setShowPositions(prev => !prev)}
-//         />
-//       </div>
-
-//       {/* ✅ Enhanced: Better toggle UI feedback */}
-//       {showPositions && (
-//         <div className="mt-8 border-t pt-6">
-//           <div className="flex justify-between items-center mb-4">
-//             <h2 className="text-xl font-semibold text-gray-800">Position Details</h2>
-//             <button 
-//               onClick={() => setShowPositions(false)}
-//               className="text-gray-500 hover:text-gray-700 text-sm"
-//             >
-//               Hide Details
-//             </button>
-//           </div>
-//           <Positions />
-//         </div>
-//       )}
-//     </div>
-//   );
-// };
-
-// const OverviewCard = ({ icon, label, value, colorClass, onClick }) => {
-//   const [textColor, bgColor] = colorClass.split(' ');
-//   return (
-//     <div
-//       onClick={onClick}
-//       className="bg-white w-full h-40 rounded-2xl p-4 sm:p-6 shadow-md hover:shadow-lg transition-all flex flex-col justify-center items-center text-center cursor-pointer"
-//     >
-//       <div className={`p-3 rounded-full mb-3 ${bgColor}`}>
-//         <div className={`${textColor}`}>{icon}</div>
-//       </div>
-//       <p className="text-sm text-gray-500">{label}</p>
-//       <p className={`text-xl font-bold ${textColor}`}>{value}</p>
-//     </div>
-//   );
-// };
-
-// export default Dashboardhome;
-
-
-
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { 
@@ -226,7 +11,10 @@ import {
   X,
   AlertCircle,
   Briefcase,
-  User
+  User,
+  Building2,
+  Globe,
+  Phone
 } from 'lucide-react';
 import Positions from './Positions';
 
@@ -246,6 +34,18 @@ const Dashboardhome = () => {
   const [unreadCount, setUnreadCount] = useState(0);
   const [notificationsLoading, setNotificationsLoading] = useState(false);
 
+  // ✅ Candidate popup states
+  const [showCandidatesModal, setShowCandidatesModal] = useState(false);
+  const [candidateDetails, setCandidateDetails] = useState([]);
+  const [candidatesLoading, setCandidatesLoading] = useState(false);
+  const [candidatesError, setCandidatesError] = useState(null);
+
+  // ✅ Client popup states
+  const [showClientsModal, setShowClientsModal] = useState(false);
+  const [clientDetails, setClientDetails] = useState([]);
+  const [clientsLoading, setClientsLoading] = useState(false);
+  const [clientsError, setClientsError] = useState(null);
+
   // Current user - HR Team role
   const currentUser = {
     id: 1,
@@ -253,12 +53,104 @@ const Dashboardhome = () => {
     role: 'hrteam'
   };
 
+  // ✅ Function to fetch and show candidate details
+  const handleCandidatesClick = async () => {
+    setShowCandidatesModal(true);
+    setCandidatesLoading(true);
+    setCandidatesError(null);
+    
+    try {
+      const response = await fetch('https://skilviu.com/backend/api/v1/candidates');
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      console.log('Candidates API Response:', data);
+      
+      let candidates = [];
+      if (Array.isArray(data)) {
+        candidates = data;
+      } else if (data.data && Array.isArray(data.data)) {
+        candidates = data.data;
+      } else if (data.success && data.data && Array.isArray(data.data)) {
+        candidates = data.data;
+      }
+      
+      if (candidates.length > 0) {
+        console.log('Sample candidate object fields:', Object.keys(candidates[0]));
+        console.log('First candidate sample:', candidates);
+      }
+      
+      setCandidateDetails(candidates);
+    } catch (err) {
+      console.error('Error fetching candidates:', err);
+      setCandidatesError('Failed to fetch candidate details. Please try again.');
+    } finally {
+      setCandidatesLoading(false);
+    }
+  };
+
+  const closeCandidatesModal = () => {
+    setShowCandidatesModal(false);
+    setCandidateDetails([]);
+    setCandidatesError(null);
+  };
+
+  // ✅ Function to fetch and show client details
+  const handleClientsClick = async () => {
+    setShowClientsModal(true);
+    setClientsLoading(true);
+    setClientsError(null);
+    
+    try {
+      const response = await fetch('https://skilviu.com/backend/api/v1/clientforms');
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      console.log('Clients API Response:', data);
+      
+      // Handle different response structures for clientforms
+      let clients = [];
+      if (Array.isArray(data)) {
+        clients = data;
+      } else if (data.data && Array.isArray(data.data)) {
+        clients = data.data;
+      } else if (data.data && data.data.data && Array.isArray(data.data.data)) {
+        clients = data.data.data;
+      } else if (data.data && data.data.data && data.data.data.data && Array.isArray(data.data.data.data.data)) {
+        clients = data.data.data.data.data;
+      } else if (data.success && data.data && Array.isArray(data.data)) {
+        clients = data.data;
+      }
+      
+      if (clients.length > 0) {
+        console.log('Sample client object fields:', Object.keys(clients[0]));
+        console.log('First client sample:', clients);
+      }
+      
+      setClientDetails(clients);
+    } catch (err) {
+      console.error('Error fetching clients:', err);
+      setClientsError('Failed to fetch client details. Please try again.');
+    } finally {
+      setClientsLoading(false);
+    }
+  };
+
+  const closeClientsModal = () => {
+    setShowClientsModal(false);
+    setClientDetails([]);
+    setClientsError(null);
+  };
+
   // Fetch task assignments and filter for HR team only
   const fetchTaskNotifications = async (showLoader = false) => {
     if (showLoader) setNotificationsLoading(true);
     
     try {
-      // Fetch both tasks and users to get user roles
       const [tasksResponse, usersResponse] = await Promise.all([
         axios.get('https://skilviu.com/backend/api/v1/task-assignments', {
           headers: {
@@ -275,18 +167,13 @@ const Dashboardhome = () => {
       ]);
 
       if (tasksResponse.data && tasksResponse.data.status === true && Array.isArray(tasksResponse.data.data)) {
-        // Get users data
         const users = usersResponse.data?.data || [];
         
-        // Filter tasks for HR team only
         const hrTasks = tasksResponse.data.data.filter(task => {
-          // Find the user assigned to this task
           const assignedUser = users.find(user => user.id === task.user_id);
-          // Only show tasks assigned to HR team members
           return assignedUser && assignedUser.user_role.toLowerCase() === 'hrteam';
         });
 
-        // Convert to notification format
         const taskNotifications = hrTasks.map(task => {
           const assignedUser = users.find(user => user.id === task.user_id);
           return {
@@ -311,14 +198,12 @@ const Dashboardhome = () => {
           };
         });
 
-        // Load read status from localStorage
         const readNotifications = JSON.parse(localStorage.getItem('hr_readNotifications') || '[]');
         const updatedNotifications = taskNotifications.map(notification => ({
           ...notification,
           read: readNotifications.includes(notification.id)
         }));
 
-        // Sort by creation date (newest first)
         updatedNotifications.sort((a, b) => new Date(b.time) - new Date(a.time));
         
         setNotifications(updatedNotifications);
@@ -333,14 +218,12 @@ const Dashboardhome = () => {
     }
   };
 
-  // Format date helper
   const formatDate = (dateString) => {
     if (!dateString) return 'No deadline';
     const date = new Date(dateString);
     return date.toLocaleDateString();
   };
 
-  // Format relative time helper
   const formatRelativeTime = (dateString) => {
     if (!dateString) return 'Unknown time';
     const date = new Date(dateString);
@@ -440,9 +323,19 @@ const Dashboardhome = () => {
         const recruitments = Array.isArray(recruitmentsData) ? recruitmentsData :
           recruitmentsData?.data && Array.isArray(recruitmentsData.data) ? recruitmentsData.data : [];
 
-        const clientForms = Array.isArray(clientFormsData) ? clientFormsData :
-          clientFormsData?.data?.data?.data && Array.isArray(clientFormsData.data.data.data) ? clientFormsData.data.data.data :
-          clientFormsData?.data && Array.isArray(clientFormsData.data) ? clientFormsData.data : [];
+        // ✅ Enhanced handling of clientforms data structure
+        let clientForms = [];
+        if (clientFormsData) {
+          if (Array.isArray(clientFormsData)) {
+            clientForms = clientFormsData;
+          } else if (clientFormsData.data && Array.isArray(clientFormsData.data)) {
+            clientForms = clientFormsData.data;
+          } else if (clientFormsData.data && clientFormsData.data.data && Array.isArray(clientFormsData.data.data)) {
+            clientForms = clientFormsData.data.data;
+          } else if (clientFormsData.data && clientFormsData.data.data && clientFormsData.data.data.data && Array.isArray(clientFormsData.data.data.data.data)) {
+            clientForms = clientFormsData.data.data.data.data;
+          }
+        }
 
         const candidates = Array.isArray(candidatesData) ? candidatesData :
           candidatesData?.data && Array.isArray(candidatesData.data) ? candidatesData.data : [];
@@ -453,6 +346,9 @@ const Dashboardhome = () => {
           const positionCount = Number(recruitment.no_of_positions) || 1;
           return sum + positionCount;
         }, 0);
+
+        console.log('Client Forms Data:', clientForms);
+        console.log('Client Forms Count:', clientForms.length);
 
         setStats({
           applications: recruitments.length,
@@ -470,23 +366,20 @@ const Dashboardhome = () => {
     fetchAllStats();
   }, []);
 
-  // ✅ NEW: Fetch notifications on component mount to show count by default
   useEffect(() => {
-    fetchTaskNotifications(false); // Don't show loader on initial fetch
+    fetchTaskNotifications(false);
   }, []);
 
-  // Fetch fresh notifications when dropdown opens (with loader)
   useEffect(() => {
     if (showNotifications) {
-      fetchTaskNotifications(true); // Show loader when dropdown opens
+      fetchTaskNotifications(true);
     }
   }, [showNotifications]);
 
-  // Auto-refresh notifications every 3 minutes
   useEffect(() => {
     const interval = setInterval(() => {
-      fetchTaskNotifications(false); // Background refresh without loader
-    }, 3 * 60 * 1000); // 3 minutes
+      fetchTaskNotifications(false);
+    }, 3 * 60 * 1000);
 
     return () => clearInterval(interval);
   }, []);
@@ -497,7 +390,6 @@ const Dashboardhome = () => {
     ));
     setUnreadCount(prev => Math.max(0, prev - 1));
     
-    // Save to localStorage with HR prefix
     const readNotifications = JSON.parse(localStorage.getItem('hr_readNotifications') || '[]');
     if (!readNotifications.includes(id)) {
       readNotifications.push(id);
@@ -510,13 +402,11 @@ const Dashboardhome = () => {
     setNotifications(notifications.map(n => ({ ...n, read: true })));
     setUnreadCount(0);
     
-    // Save all as read in localStorage with HR prefix
     const readNotifications = JSON.parse(localStorage.getItem('hr_readNotifications') || '[]');
     const updatedRead = [...new Set([...readNotifications, ...allIds])];
     localStorage.setItem('hr_readNotifications', JSON.stringify(updatedRead));
   };
 
-  // Enhanced notification icon function
   const getNotificationIcon = (type, priority) => {
     if (type === 'task_assignment') {
       switch (priority?.toLowerCase()) {
@@ -533,7 +423,6 @@ const Dashboardhome = () => {
       }
     }
     
-    // Original notification icons for other types
     switch (type) {
       case 'new_candidate':
         return <Users className="w-4 h-4 text-blue-600" />;
@@ -550,7 +439,6 @@ const Dashboardhome = () => {
     }
   };
 
-  // Priority badge colors
   const getPriorityBadge = (priority) => {
     const colors = {
       urgent: 'bg-red-600 text-white',
@@ -598,7 +486,6 @@ const Dashboardhome = () => {
             ) : (
               <Bell className="w-6 h-6 text-gray-600" />
             )}
-            {/* ✅ This badge now shows by default when there are unread notifications */}
             {unreadCount > 0 && (
               <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
                 {unreadCount > 9 ? '9+' : unreadCount}
@@ -711,19 +598,20 @@ const Dashboardhome = () => {
       )}
 
       <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 sm:gap-6 mb-10">
+        {/* ✅ Clients card with popup functionality */}
         <OverviewCard
           icon={<ClipboardList className="w-6 h-6" />}
           label="No. of Clients"
           value={stats.clientForms}
           colorClass="text-purple-600 bg-purple-100"
-          onClick={() => console.log('Clients card clicked')}
+          onClick={handleClientsClick}
         />
         <OverviewCard
           icon={<Users className="w-6 h-6" />}
           label="No. of Candidates"
           value={stats.candidates}
           colorClass="text-green-600 bg-green-100"
-          onClick={() => console.log('Candidates card clicked')}
+          onClick={handleCandidatesClick}
         />
         <OverviewCard
           icon={<FileSignature className="w-6 h-6" />}
@@ -733,6 +621,232 @@ const Dashboardhome = () => {
           onClick={() => setShowPositions(prev => !prev)}
         />
       </div>
+
+      {/* ✅ UPDATED: Clients Details Modal/Popup - Table format WITH website column */}
+      {showClientsModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-5xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-2xl font-bold text-gray-800 flex items-center">
+                <Building2 className="mr-2 w-6 h-6 text-purple-600" />
+                Client Details ({clientDetails.length})
+              </h2>
+              <button
+                onClick={closeClientsModal}
+                className="text-gray-500 hover:text-gray-700 p-2"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            {clientsLoading && (
+              <div className="text-center py-10">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
+                <p className="text-gray-600 mt-4">Loading client details...</p>
+              </div>
+            )}
+
+            {clientsError && (
+              <div className="text-center py-10">
+                <p className="text-red-600 mb-4">{clientsError}</p>
+                <button
+                  onClick={handleClientsClick}
+                  className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700"
+                >
+                  Retry
+                </button>
+              </div>
+            )}
+
+            {!clientsLoading && !clientsError && clientDetails.length === 0 && (
+              <div className="text-center py-10">
+                <Building2 className="mx-auto w-12 h-12 text-gray-400 mb-4" />
+                <p className="text-gray-600">No clients found</p>
+              </div>
+            )}
+
+            {!clientsLoading && !clientsError && clientDetails.length > 0 && (
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Company Name
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Email
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Phone
+                      </th>
+                      {/* ✅ ADDED BACK: Website column */}
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Website
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {clientDetails.map((client, index) => (
+                      <tr key={client.id || index} className="hover:bg-gray-50">
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex items-center">
+                            <div className="flex-shrink-0 h-10 w-10">
+                              <div className="h-10 w-10 rounded-full bg-purple-100 flex items-center justify-center">
+                                <Building2 className="h-6 w-6 text-purple-600" />
+                              </div>
+                            </div>
+                            <div className="ml-4">
+                              <div className="text-sm font-medium text-gray-900">
+                                {client.company_name || client.client_name || client.name || 'Unnamed Client'}
+                              </div>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm text-gray-900">
+                            {client.email || client.contact_email || client.client_email || 'N/A'}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm text-gray-900">
+                            {client.phone || 
+                             client.contact_number || 
+                             client.mobile || 
+                             client.phone_number || 
+                             client.contact || 
+                             client.mobile_number || 
+                             'N/A'}
+                          </div>
+                        </td>
+                        {/* ✅ ADDED BACK: Website table cell */}
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm text-gray-900">
+                            {client.website || client.company_website || client.web_url || 'N/A'}
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ✅ Candidates Details Modal/Popup */}
+      {showCandidatesModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-2xl font-bold text-gray-800 flex items-center">
+                <Users className="mr-2 w-6 h-6 text-green-600" />
+                Candidate Details ({candidateDetails.length})
+              </h2>
+              <button
+                onClick={closeCandidatesModal}
+                className="text-gray-500 hover:text-gray-700 p-2"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            {candidatesLoading && (
+              <div className="text-center py-10">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
+                <p className="text-gray-600 mt-4">Loading candidate details...</p>
+              </div>
+            )}
+
+            {candidatesError && (
+              <div className="text-center py-10">
+                <p className="text-red-600 mb-4">{candidatesError}</p>
+                <button
+                  onClick={handleCandidatesClick}
+                  className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700"
+                >
+                  Retry
+                </button>
+              </div>
+            )}
+
+            {!candidatesLoading && !candidatesError && candidateDetails.length === 0 && (
+              <div className="text-center py-10">
+                <Users className="mx-auto w-12 h-12 text-gray-400 mb-4" />
+                <p className="text-gray-600">No candidates found</p>
+              </div>
+            )}
+
+            {!candidatesLoading && !candidatesError && candidateDetails.length > 0 && (
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Candidate Name
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Email
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Phone
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Location
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {candidateDetails.map((candidate, index) => (
+                      <tr key={candidate.id || index} className="hover:bg-gray-50">
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex items-center">
+                            <div className="flex-shrink-0 h-10 w-10">
+                              <div className="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center">
+                                <User className="h-6 w-6 text-green-600" />
+                              </div>
+                            </div>
+                            <div className="ml-4">
+                              <div className="text-sm font-medium text-gray-900">
+                                {candidate.candidate_name || candidate.name || candidate.full_name || 'N/A'}
+                              </div>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm text-gray-900">
+                            {candidate.email || candidate.email_id || candidate.candidate_email || 'N/A'}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm text-gray-900">
+                            {candidate.phone || 
+                             candidate.contact_number || 
+                             candidate.mobile || 
+                             candidate.phone_number || 
+                             candidate.contact || 
+                             candidate.mobile_number || 
+                             'N/A'}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm text-gray-900">
+                            {candidate.current_location || 
+                             candidate.location || 
+                             candidate.city || 
+                             candidate.address || 
+                             'N/A'}
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {showPositions && (
         <div className="mt-8 border-t pt-6">
