@@ -118,11 +118,28 @@ function Careers() {
   const jobsPerPage = 6;
   const navigate = useNavigate();
 
+  // useEffect(() => {
+  //   fetch('https://skilviu.com/backend/api/v1/recruitments')
+  //     .then((res) => res.json())
+  //     .then((data) => {
+  //       setJobs(Array.isArray(data) ? data : data.data || []);
+  //       setLoading(false);
+  //     })
+  //     .catch((error) => {
+  //       console.error('Error fetching recruitment data:', error);
+  //       setLoading(false);
+  //     });
+  // }, []);
+
   useEffect(() => {
-    fetch('https://skilviu.com/backend/api/v1/recruitments')
+    // Fetch only active jobs for career page
+    fetch('https://skilviu.com/backend/api/v1/recruitments?active_only=1')
       .then((res) => res.json())
       .then((data) => {
-        setJobs(Array.isArray(data) ? data : data.data || []);
+        const jobsData = Array.isArray(data) ? data : data.data || [];
+        // Filter out any inactive jobs as an extra safety measure
+        const activeJobs = jobsData.filter(job => job.is_active !== false);
+        setJobs(activeJobs);
         setLoading(false);
       })
       .catch((error) => {
