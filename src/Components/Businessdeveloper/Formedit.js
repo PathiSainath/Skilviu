@@ -1,257 +1,3 @@
-// import React, { useEffect, useState } from 'react';
-// import axios from 'axios';
-
-// function Formedit() {
-//   const [jobs, setJobs] = useState([]);
-//   const [loading, setLoading] = useState(true);
-//   const [error, setError] = useState(null);
-//   const [editingJob, setEditingJob] = useState(null);
-//   const [jdFile, setJdFile] = useState(null); // ⬅️ Added for new file
-
-
-//   useEffect(() => {
-//     const fetchJobs = async () => {
-//       try {
-//         const response = await fetch('https://skilviu.com/backend/api/v1/recruitments');
-//         if (!response.ok) throw new Error('Failed to fetch jobs');
-//         const data = await response.json();
-
-//         // Add this console to inspect the response:
-//         console.log("API response:", data);
-
-//         // Adjust based on the actual structure
-//         const jobList = Array.isArray(data) ? data : data.data || [];
-//         setJobs(jobList);
-//       } catch (err) {
-//         console.error(err);
-//         setError('Failed to load jobs.');
-//       } finally {
-//         setLoading(false);
-//       }
-//     };
-
-//     fetchJobs();
-//   }, []);
-
-//   const handleDelete = async (job_id) => {
-//     const confirmed = window.confirm('Are you sure you want to delete this job?');
-//     if (!confirmed) return;
-
-//     try {
-//       const res = await fetch(`https://skilviu.com/backend/api/v1/recruitments/${job_id}`, {
-//         method: 'DELETE',
-//       });
-//       if (res.ok) {
-//         setJobs((prevJobs) => prevJobs.filter((job) => job.job_id !== job_id));
-//         alert('Job deleted successfully');
-//       } else {
-//         alert('Failed to delete job');
-//       }
-//     } catch (error) {
-//       console.error(error);
-//       alert('An error occurred while deleting the job');
-//     }
-//   };
-
-//   const handleEditClick = (job) => {
-//     setEditingJob({ ...job });
-//     setJdFile(null); // ⬅️ Reset any previously selected file
-//   };
-
-//   const handleModalChange = (e) => {
-//     const { name, value } = e.target;
-//     setEditingJob((prev) => ({ ...prev, [name]: value }));
-//   };
-
-//   const handleUpdate = async (e) => {
-//     e.preventDefault();
-
-//     if (!editingJob || !editingJob.job_id) {
-//       alert('Error: Missing job ID.');
-//       return;
-//     }
-
-//     try {
-//       const formData = new FormData();
-
-//       for (const key in editingJob) {
-//         formData.append(key, editingJob[key]);
-//       }
-
-//       if (jdFile) {
-//         formData.append('jd_document_file', jdFile);
-//       }
-
-//       const res = await axios.post(
-//         `https://skilviu.com/backend/api/v1/recruitments/${editingJob.job_id}?_method=PUT`,
-//         formData,
-//         {
-//           headers: {
-//             'Content-Type': 'multipart/form-data',
-//           },
-//         }
-//       );
-
-//       const updated = res.data;
-//       setJobs((prev) =>
-//         prev.map((job) =>
-//           job.job_id === editingJob.job_id ? updated.data : job
-//         )
-//       );
-//       alert('Job updated successfully');
-//       setEditingJob(null);
-//       setJdFile(null);
-//     } catch (err) {
-//       console.error(err.response || err);
-//       alert('Update failed. See console for details.');
-//     }
-//   };
-
-//   const closeModal = () => {
-//     setEditingJob(null);
-//     setJdFile(null);
-//   };
-
-//   if (loading) return <div className="p-6 text-center">Loading jobs...</div>;
-//   if (error) return <div className="p-6 text-red-600 text-center">{error}</div>;
-
-//   return (
-//     <div className="p-6">
-//       <h1 className="text-2xl font-semibold mb-6">All Job List</h1>
-
-//       <table className="min-w-full bg-white shadow rounded overflow-hidden text-sm">
-//         <thead className="bg-blue-800 text-white">
-//           <tr>
-//             <th className="px-4 py-2">Job Title</th>
-//             <th className="px-4 py-2">Client</th>
-//             <th className="px-4 py-2">Location</th>
-//             <th className="px-4 py-2">Actions</th>
-//           </tr>
-//         </thead>
-//         <tbody className="text-gray-700">
-//           {jobs.map((job) => (
-//             <tr key={job.job_id} className="border-t hover:bg-gray-50">
-//               <td className="px-4 py-2">{job.job_title}</td>
-//               <td className="px-4 py-2">{job.client_name}</td>
-//               <td className="px-4 py-2">{job.job_location}</td>
-//               <td className="px-4 py-2 space-x-2">
-//                 <button
-//                   onClick={() => handleEditClick(job)}
-//                   className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded text-xs"
-//                 >
-//                   Edit
-//                 </button>
-//                 <button
-//                   onClick={() => handleDelete(job.job_id)}
-//                   className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-xs"
-//                 >
-//                   Delete
-//                 </button>
-//               </td>
-//             </tr>
-//           ))}
-//         </tbody>
-//       </table>
-
-//       {/* Modal */}
-//       {editingJob && (
-//         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
-//           <div className="bg-white p-6 rounded-lg w-full max-w-3xl max-h-screen overflow-y-auto">
-//             <h2 className="text-xl font-bold mb-4">Edit Job</h2>
-//             <form onSubmit={handleUpdate} className="grid grid-cols-2 gap-4">
-//               {[
-//                 'client_id',
-//                 'client_name',
-//                 'job_title',
-//                 'min_experience',
-//                 'max_experience',
-//                 'preferred_company',
-//                 'type_of_industry',
-//                 'notice_period',
-//                 'benefit',
-//                 'budget',
-//                 'package',
-//                 'qualification',
-//                 'skills_required',
-//                 'job_location',
-//                 'timings',
-//                 'no_of_positions',
-//                 'working_days',
-//                 'diversity_preference',
-//                 'hiring_type',
-//                 'work_mode',
-//                 'interview_process',
-//                 'key_responsibilities',
-//                 'job_description',
-//               ].map((field) => (
-//                 <div key={field} className="col-span-1">
-//                   <label className="block mb-1 text-sm capitalize">
-//                     {field.replace(/_/g, ' ')}
-//                   </label>
-
-//                   {['skills_required', 'key_responsibilities', 'job_description'].includes(field) ? (
-//                     <textarea
-//                       name={field}
-//                       value={editingJob[field] || ''}
-//                       onChange={handleModalChange}
-//                       rows={5}
-//                       className="w-full p-2 border rounded"
-//                     />
-//                   ) : (
-//                     <input
-//                       type="text"
-//                       name={field}
-//                       value={editingJob[field] || ''}
-//                       onChange={handleModalChange}
-//                       className="w-full p-2 border rounded"
-//                     />
-//                   )}
-//                 </div>
-//               ))}
-
-//               {/* PDF Upload Field */}
-//               <div className="col-span-2">
-//                 <label className="block mb-1 text-sm">Upload New JD PDF</label>
-//                 <input
-//                   type="file"
-//                   accept="application/pdf"
-//                   onChange={(e) => setJdFile(e.target.files[0])}
-//                   className="w-full p-2 border rounded"
-//                 />
-//                 {editingJob.jd_document_path && (
-//                   <p className="text-xs mt-1 text-gray-500">
-//                     Current file: {editingJob.jd_document_path.split('/').pop()}
-//                   </p>
-//                 )}
-//               </div>
-
-//               <div className="col-span-2 flex justify-end gap-3 mt-4">
-//                 <button
-//                   type="button"
-//                   onClick={closeModal}
-//                   className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
-//                 >
-//                   Cancel
-//                 </button>
-//                 <button
-//                   type="submit"
-//                   className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-//                 >
-//                   Update
-//                 </button>
-//               </div>
-//             </form>
-//           </div>
-//         </div>
-//       )}
-
-//     </div>
-//   );
-// }
-
-// export default Formedit;
-
-
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 
@@ -261,11 +7,11 @@ function Formedit() {
   const [error, setError] = useState(null);
   const [editingJob, setEditingJob] = useState(null);
   const [jdFile, setJdFile] = useState(null);
+  const [actionLoading, setActionLoading] = useState({}); // Track loading for individual actions
 
   useEffect(() => {
     const fetchJobs = async () => {
       try {
-        // UPDATED: Use the admin endpoint to fetch ALL jobs (including closed ones)
         const response = await fetch('https://skilviu.com/backend/api/v1/recruitments/admin/all');
         if (!response.ok) throw new Error('Failed to fetch jobs');
         const data = await response.json();
@@ -278,7 +24,6 @@ function Formedit() {
         const jobList = Array.isArray(data) ? data : data.data || [];
         setJobs(jobList);
         
-        // Verify we got all expected jobs
         if (data.total_count && jobList.length !== data.total_count) {
           console.warn(`⚠️ Expected ${data.total_count} jobs but got ${jobList.length}. Check data structure.`);
         }
@@ -294,57 +39,135 @@ function Formedit() {
     fetchJobs();
   }, []);
 
+  // Helper function to refresh jobs list
+  const refreshJobs = async () => {
+    try {
+      const response = await fetch('https://skilviu.com/backend/api/v1/recruitments/admin/all');
+      const data = await response.json();
+      const jobList = Array.isArray(data) ? data : data.data || [];
+      setJobs(jobList);
+    } catch (err) {
+      console.error('Error refreshing jobs:', err);
+    }
+  };
+
   const handleDelete = async (job_id) => {
     const confirmed = window.confirm('Are you sure you want to delete this job?');
     if (!confirmed) return;
+
+    setActionLoading(prev => ({ ...prev, [`delete_${job_id}`]: true }));
 
     try {
       const res = await fetch(`https://skilviu.com/backend/api/v1/recruitments/${job_id}`, {
         method: 'DELETE',
       });
+      
       if (res.ok) {
         setJobs((prevJobs) => prevJobs.filter((job) => job.job_id !== job_id));
         alert('Job deleted successfully');
       } else {
-        alert('Failed to delete job');
+        const errorData = await res.json().catch(() => ({}));
+        alert(`Failed to delete job: ${errorData.message || 'Unknown error'}`);
       }
     } catch (error) {
       console.error(error);
       alert('An error occurred while deleting the job');
+    } finally {
+      setActionLoading(prev => ({ ...prev, [`delete_${job_id}`]: false }));
     }
   };
 
-  // Handle reopening closed jobs
+  // Enhanced reopen job function using the new service endpoint
   const handleReopenJob = async (job_id) => {
     const confirmed = window.confirm('Are you sure you want to reopen this closed job?');
     if (!confirmed) return;
 
+    setActionLoading(prev => ({ ...prev, [`reopen_${job_id}`]: true }));
+
     try {
-      const res = await fetch(`https://skilviu.com/backend/api/v1/job-closure/${job_id}/reopen`, {
-        method: 'POST',
-      });
+      console.log(`Attempting to reopen job ${job_id}`);
       
-      if (res.ok) {
-        // Refresh the jobs list
-        const response = await fetch('https://skilviu.com/backend/api/v1/recruitments/admin/all');
-        const data = await response.json();
-        const jobList = Array.isArray(data) ? data : data.data || [];
-        setJobs(jobList);
-        alert('Job reopened successfully');
+      // Use the enhanced service endpoint
+      const res = await fetch(`https://skilviu.com/backend/api/v1/${job_id}/reopen`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify({
+          reason: 'Manual reopen by admin'
+        }),
+      });
+
+      const responseData = await res.json();
+      console.log('Reopen response:', responseData);
+
+      if (res.ok && responseData.success) {
+        await refreshJobs();
+        alert('Job reopened successfully! It will now appear on the career page.');
       } else {
-        const errorData = await res.json();
-        alert(`Failed to reopen job: ${errorData.message || 'Unknown error'}`);
+        // If service endpoint fails, try fallback method
+        console.log('Service endpoint failed, trying fallback...');
+        await handleReopenJobFallback(job_id);
       }
     } catch (error) {
-      console.error(error);
-      alert('An error occurred while reopening the job');
+      console.error('Network error:', error);
+      // Try fallback method
+      await handleReopenJobFallback(job_id);
+    } finally {
+      setActionLoading(prev => ({ ...prev, [`reopen_${job_id}`]: false }));
     }
   };
 
-  // Handle manual job closure
+  // Fallback reopen method
+  const handleReopenJobFallback = async (job_id) => {
+    try {
+      const currentJob = jobs.find(job => job.job_id === job_id);
+      if (!currentJob) {
+        alert('Job not found');
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append('is_active', true);
+      formData.append('status', 'open');
+      formData.append('auto_close_reason', '');
+      formData.append('auto_closed_at', '');
+
+      // Add required fields
+      ['client_id', 'client_name', 'job_title', 'job_location', 'no_of_positions',
+       'type_of_industry', 'notice_period', 'benefit', 'budget', 'package',
+       'qualification', 'skills_required', 'hiring_type', 'work_mode',
+       'key_responsibilities', 'job_description'].forEach(field => {
+        if (currentJob[field] !== null && currentJob[field] !== undefined && currentJob[field] !== '') {
+          formData.append(field, currentJob[field]);
+        }
+      });
+
+      const res = await fetch(`https://skilviu.com/backend/api/v1/recruitments/${job_id}?_method=PUT`, {
+        method: 'POST',
+        body: formData,
+      });
+
+      const responseData = await res.json();
+
+      if (res.ok) {
+        await refreshJobs();
+        alert('Job reopened successfully using fallback method!');
+      } else {
+        throw new Error(responseData.message || 'Fallback method failed');
+      }
+    } catch (error) {
+      console.error('Fallback reopen failed:', error);
+      alert(`Failed to reopen job: ${error.message}`);
+    }
+  };
+
   const handleCloseJob = async (job_id) => {
     const reason = prompt('Enter reason for closing this job:');
     if (!reason) return;
+
+    setActionLoading(prev => ({ ...prev, [`close_${job_id}`]: true }));
 
     try {
       const res = await fetch(`https://skilviu.com/backend/api/v1/job-closure/${job_id}/close`, {
@@ -359,19 +182,17 @@ function Formedit() {
       });
       
       if (res.ok) {
-        // Refresh the jobs list
-        const response = await fetch('https://skilviu.com/backend/api/v1/recruitments/admin/all');
-        const data = await response.json();
-        const jobList = Array.isArray(data) ? data : data.data || [];
-        setJobs(jobList);
+        await refreshJobs();
         alert('Job closed successfully');
       } else {
-        const errorData = await res.json();
+        const errorData = await res.json().catch(() => ({}));
         alert(`Failed to close job: ${errorData.message || 'Unknown error'}`);
       }
     } catch (error) {
       console.error(error);
       alert('An error occurred while closing the job');
+    } finally {
+      setActionLoading(prev => ({ ...prev, [`close_${job_id}`]: false }));
     }
   };
 
@@ -388,6 +209,7 @@ function Formedit() {
     }));
   };
 
+  // Enhanced update with better auto-reopen integration
   const handleUpdate = async (e) => {
     e.preventDefault();
 
@@ -396,13 +218,41 @@ function Formedit() {
       return;
     }
 
+    // Validation
+    const requiredFields = ['job_title', 'client_name', 'job_location', 'no_of_positions'];
+    const missingFields = requiredFields.filter(field => 
+      !editingJob[field] || editingJob[field].toString().trim() === ''
+    );
+    
+    if (missingFields.length > 0) {
+      alert(`Please fill in the following required fields: ${missingFields.join(', ')}`);
+      return;
+    }
+
+    if (editingJob.no_of_positions && (isNaN(editingJob.no_of_positions) || parseInt(editingJob.no_of_positions) <= 0)) {
+      alert('Number of positions must be a positive number');
+      return;
+    }
+
+    setActionLoading(prev => ({ ...prev, 'update': true }));
+
     try {
+      const originalJob = jobs.find(job => job.job_id === editingJob.job_id);
+      
+      // Check if this might trigger auto-reopen
+      const willAutoReopen = originalJob && 
+                            originalJob.is_active === false && 
+                            parseInt(editingJob.no_of_positions) > parseInt(originalJob.no_of_positions || 0);
+
       const formData = new FormData();
 
-      // Add all job fields to formData
+      // Add all job fields
       for (const key in editingJob) {
         if (key !== 'created_at' && key !== 'updated_at') {
-          formData.append(key, editingJob[key]);
+          const value = editingJob[key];
+          if (value !== null && value !== undefined) {
+            formData.append(key, value);
+          }
         }
       }
 
@@ -421,18 +271,44 @@ function Formedit() {
         }
       );
 
-      // Refresh the entire job list to get latest status
-      const response = await fetch('https://skilviu.com/backend/api/v1/recruitments/admin/all');
-      const data = await response.json();
-      const jobList = Array.isArray(data) ? data : data.data || [];
-      setJobs(jobList);
+      console.log('Update response:', res.data);
+
+      // Refresh jobs list
+      await refreshJobs();
       
-      alert('Job updated successfully');
+      // Show appropriate success message
+      if (res.data.auto_reopen_result && res.data.auto_reopen_result.success) {
+        alert('Job updated and automatically reopened due to increased positions! It will now appear on the career page.');
+      } else if (willAutoReopen) {
+        alert('Job updated successfully! Auto-reopen may take a moment to process.');
+      } else if (res.data.message && res.data.message.includes('automatically reopened')) {
+        alert(res.data.message);
+      } else {
+        alert('Job updated successfully');
+      }
+      
       setEditingJob(null);
       setJdFile(null);
     } catch (err) {
-      console.error(err.response || err);
-      alert(`Update failed: ${err.response?.data?.message || err.message}`);
+      console.error('Update error details:', err.response || err);
+      
+      let errorMessage = 'Update failed';
+      if (err.response?.data) {
+        if (err.response.data.errors) {
+          const validationErrors = Object.entries(err.response.data.errors)
+            .map(([field, messages]) => `${field}: ${Array.isArray(messages) ? messages.join(', ') : messages}`)
+            .join('\n');
+          errorMessage = `Validation errors:\n${validationErrors}`;
+        } else if (err.response.data.message) {
+          errorMessage = err.response.data.message;
+        }
+      } else if (err.message) {
+        errorMessage = err.message;
+      }
+      
+      alert(errorMessage);
+    } finally {
+      setActionLoading(prev => ({ ...prev, 'update': false }));
     }
   };
 
@@ -535,27 +411,30 @@ function Formedit() {
                     {job.is_active === false ? (
                       <button
                         onClick={() => handleReopenJob(job.job_id)}
-                        className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-xs"
+                        disabled={actionLoading[`reopen_${job.job_id}`]}
+                        className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-xs disabled:opacity-50"
                         title="Reopen Job"
                       >
-                        Reopen
+                        {actionLoading[`reopen_${job.job_id}`] ? '...' : 'Reopen'}
                       </button>
                     ) : (
                       <button
                         onClick={() => handleCloseJob(job.job_id)}
-                        className="bg-orange-600 hover:bg-orange-700 text-white px-3 py-1 rounded text-xs"
+                        disabled={actionLoading[`close_${job.job_id}`]}
+                        className="bg-orange-600 hover:bg-orange-700 text-white px-3 py-1 rounded text-xs disabled:opacity-50"
                         title="Close Job"
                       >
-                        Close
+                        {actionLoading[`close_${job.job_id}`] ? '...' : 'Close'}
                       </button>
                     )}
                     
                     <button
                       onClick={() => handleDelete(job.job_id)}
-                      className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-xs"
+                      disabled={actionLoading[`delete_${job.job_id}`]}
+                      className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-xs disabled:opacity-50"
                       title="Delete Job"
                     >
-                      Delete
+                      {actionLoading[`delete_${job.job_id}`] ? '...' : 'Delete'}
                     </button>
                   </div>
                 </td>
@@ -587,6 +466,15 @@ function Formedit() {
             </div>
             
             <form onSubmit={handleUpdate} className="space-y-6">
+              {/* Auto-reopen Alert */}
+              {editingJob.is_active === false && (
+                <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
+                  <p className="text-sm text-green-800">
+                    🚀 <strong>Auto-Reopen Feature:</strong> Increasing the number of positions will automatically reopen this job and make it visible on the career page!
+                  </p>
+                </div>
+              )}
+
               {/* Job Status Control Section */}
               <div className="p-4 bg-gray-50 rounded-lg">
                 <h3 className="font-semibold mb-3">Job Status Control</h3>
@@ -633,31 +521,31 @@ function Formedit() {
               {/* Main Job Fields */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {[
-                  { field: 'client_id', label: 'Client ID', type: 'number' },
-                  { field: 'client_name', label: 'Client Name', type: 'text' },
-                  { field: 'job_title', label: 'Job Title', type: 'text' },
-                  { field: 'min_experience', label: 'Min Experience', type: 'number' },
-                  { field: 'max_experience', label: 'Max Experience', type: 'number' },
-                  { field: 'preferred_company', label: 'Preferred Company', type: 'text' },
-                  { field: 'type_of_industry', label: 'Type of Industry', type: 'text' },
-                  { field: 'notice_period', label: 'Notice Period', type: 'text' },
-                  { field: 'benefit', label: 'Benefit', type: 'text' },
-                  { field: 'budget', label: 'Budget', type: 'text' },
-                  { field: 'package', label: 'Package', type: 'text' },
-                  { field: 'job_location', label: 'Job Location', type: 'text' },
-                  { field: 'timings', label: 'Timings', type: 'text' },
-                  { field: 'no_of_positions', label: 'Number of Positions', type: 'number' },
-                  { field: 'working_days', label: 'Working Days', type: 'number' },
-                  { field: 'diversity_preference', label: 'Diversity Preference', type: 'text' },
-                  { field: 'hiring_type', label: 'Hiring Type', type: 'text' },
-                  { field: 'work_mode', label: 'Work Mode', type: 'text' },
-                ].map(({ field, label, type }) => (
+                  { field: 'client_id', label: 'Client ID', type: 'number', required: false },
+                  { field: 'client_name', label: 'Client Name *', type: 'text', required: true },
+                  { field: 'job_title', label: 'Job Title *', type: 'text', required: true },
+                  { field: 'min_experience', label: 'Min Experience', type: 'number', required: false },
+                  { field: 'max_experience', label: 'Max Experience', type: 'number', required: false },
+                  { field: 'preferred_company', label: 'Preferred Company', type: 'text', required: false },
+                  { field: 'type_of_industry', label: 'Type of Industry', type: 'text', required: false },
+                  { field: 'notice_period', label: 'Notice Period', type: 'text', required: false },
+                  { field: 'benefit', label: 'Benefit', type: 'text', required: false },
+                  { field: 'budget', label: 'Budget', type: 'text', required: false },
+                  { field: 'package', label: 'Package', type: 'text', required: false },
+                  { field: 'job_location', label: 'Job Location *', type: 'text', required: true },
+                  { field: 'timings', label: 'Timings', type: 'text', required: false },
+                  { field: 'no_of_positions', label: 'Number of Positions *', type: 'number', required: true },
+                  { field: 'working_days', label: 'Working Days', type: 'number', required: false },
+                  { field: 'diversity_preference', label: 'Diversity Preference', type: 'text', required: false },
+                  { field: 'hiring_type', label: 'Hiring Type', type: 'text', required: false },
+                  { field: 'work_mode', label: 'Work Mode', type: 'text', required: false },
+                ].map(({ field, label, type, required }) => (
                   <div key={field}>
                     <label className="block mb-1 text-sm font-medium">
                       {label}
                       {field === 'no_of_positions' && editingJob.is_active === false && (
-                        <span className="text-red-600 text-xs ml-1">
-                          (Increase to reopen job)
+                        <span className="text-green-600 text-xs ml-1">
+                          (Increase to auto-reopen job)
                         </span>
                       )}
                     </label>
@@ -666,7 +554,12 @@ function Formedit() {
                       name={field}
                       value={editingJob[field] || ''}
                       onChange={handleModalChange}
-                      className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500"
+                      required={required}
+                      className={`w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 ${
+                        required && (!editingJob[field] || editingJob[field].toString().trim() === '') 
+                          ? 'border-red-300 bg-red-50' 
+                          : ''
+                      }`}
                     />
                   </div>
                 ))}
@@ -726,9 +619,10 @@ function Formedit() {
                 </button>
                 <button
                   type="submit"
-                  className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+                  disabled={actionLoading.update}
+                  className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors disabled:opacity-50"
                 >
-                  Update Job
+                  {actionLoading.update ? 'Updating...' : 'Update Job'}
                 </button>
               </div>
             </form>
@@ -740,3 +634,4 @@ function Formedit() {
 }
 
 export default Formedit;
+
