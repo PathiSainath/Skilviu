@@ -91,17 +91,6 @@ function Careers() {
     fetchJobs();
   }, []); // Empty dependency array - runs once on mount
 
-  // Function to manually refresh jobs (useful for testing)
-  const refreshJobs = () => {
-    console.log('Manually refreshing jobs...');
-    setLoading(true);
-    // Trigger useEffect by updating a dependency or call fetchJobs directly
-    const fetchJobs = async () => {
-      // ... same logic as above ...
-    };
-    fetchJobs();
-  };
-
   const handleApplyNow = (job) => {
     navigate('/candidateform', { state: { job_id: job.job_id, job_title: job.job_title } });
   };
@@ -143,27 +132,13 @@ function Careers() {
       </motion.div>
 
       <div className="px-6 py-10">
-        {/* Debug Information - Remove in production */}
-        <div className="mb-4 p-4 bg-gray-100 rounded text-sm">
-          <p><strong>Debug Info:</strong></p>
-          <p>Loading: {loading.toString()}</p>
-          <p>Jobs Count: {jobs.length}</p>
-          <p>Error: {error || 'None'}</p>
-          <button 
-            onClick={refreshJobs}
-            className="mt-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-          >
-            Refresh Jobs
-          </button>
-        </div>
-
         {loading ? (
           <p className="text-center text-lg text-gray-600">Loading job openings...</p>
         ) : error ? (
           <div className="text-center">
             <p className="text-lg text-red-600 mb-4">{error}</p>
             <button 
-              onClick={refreshJobs}
+              onClick={() => window.location.reload()}
               className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
             >
               Try Again
@@ -172,12 +147,7 @@ function Careers() {
         ) : jobs.length === 0 ? (
           <div className="text-center">
             <p className="text-lg text-gray-600 mb-4">No job openings available at the moment.</p>
-            <button 
-              onClick={refreshJobs}
-              className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-            >
-              Refresh
-            </button>
+            <p className="text-sm text-gray-500">Please check back later for new opportunities.</p>
           </div>
         ) : (
           <>
