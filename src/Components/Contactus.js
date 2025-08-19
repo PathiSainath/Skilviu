@@ -25,7 +25,7 @@ function Contactus() {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async (e) => {
@@ -34,16 +34,23 @@ function Contactus() {
     setStatusMessage('');
 
     try {
-      const response = await fetch('https://skilviu.com/backend/api/v1/submit-feedback', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-      });
+      const response = await fetch(
+        'https://skilviu.com/backend/api/v1/submit-feedback',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(formData),
+        }
+      );
+
+      // Get response safely
+      const data = await response.json().catch(() => ({}));
+      console.log('Response status:', response.status, 'Response body:', data);
 
       if (response.ok) {
-        setStatusMessage('Feedback submitted successfully!');
+        setStatusMessage(data.message || 'Feedback submitted successfully!');
         setFormData({
           first_name: '',
           last_name: '',
@@ -52,10 +59,10 @@ function Contactus() {
           message: '',
         });
       } else {
-        setStatusMessage('Failed to submit feedback.');
+        setStatusMessage(data.message || 'Failed to submit feedback.');
       }
     } catch (err) {
-      console.error(err);
+      console.error('Error:', err);
       setStatusMessage('Something went wrong. Please try again.');
     } finally {
       setLoading(false);
