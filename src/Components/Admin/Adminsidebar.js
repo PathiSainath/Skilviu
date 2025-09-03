@@ -48,7 +48,7 @@ import {
   User,
   UserCheck,
   LogOut,
-  Mail, // 👈 added Mail icon
+  Mail, 
 } from 'lucide-react';
 
 const navItemClass = ({ isActive }) =>
@@ -76,8 +76,12 @@ const Adminsidebar = () => {
           </NavLink>
 
           <NavLink to="/admindashboard/feedbacks" className={navItemClass}>
-            <Mail className="mr-2 w-4 h-4" /> {/* 👈 changed icon */}
-            Contact Feedback
+            <Mail className="mr-2 w-4 h-4" /> 
+            Contact Feedback's
+          </NavLink>
+          <NavLink to="/admindashboard/Scams" className={navItemClass}>
+            <Mail className="mr-2 w-4 h-4" /> 
+            Reported Scams
           </NavLink>
         </nav>
       </div>

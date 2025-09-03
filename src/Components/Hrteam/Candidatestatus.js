@@ -26,11 +26,11 @@ function Candidatestatus() {
   // **FIXED: Function to count only candidates who completed offer_letter AND are not rejected**
   const getSelectedStudentsCount = () => {
     if (!filteredData || !filteredData.candidates || filteredData.candidates.length === 0) return 0;
-    
+
     return filteredData.candidates.filter(candidate => {
       const offerLetter = candidate.process_stages?.offer_letter;
       const isRejected = candidate.process_stages?.rejected === 'rejected';
-      
+
       // Only count if offer_letter is completed AND not rejected
       return offerLetter === 'completed' && !isRejected;
     }).length;
@@ -40,20 +40,20 @@ function Candidatestatus() {
   const isCandidateSelected = (candidate) => {
     const offerLetter = candidate.process_stages?.offer_letter;
     const isRejected = candidate.process_stages?.rejected === 'rejected';
-    
+
     return offerLetter === 'completed' && !isRejected;
   };
 
   // **FIXED: Function to count candidates in process (Selected status but not completed offer_letter and not rejected)**
   const getCandidatesInProcess = () => {
     if (!filteredData || !filteredData.candidates || filteredData.candidates.length === 0) return 0;
-    
+
     return filteredData.candidates.filter(candidate => {
       const isSelected = candidate.status === 'Selected';
       const hasStartedProcess = hasProcessStarted(candidate);
       const isFullySelected = candidate.process_stages?.offer_letter === 'completed';
       const isRejected = candidate.process_stages?.rejected === 'rejected';
-      
+
       // Count if in process but not fully selected and not rejected
       return (isSelected || hasStartedProcess) && !isFullySelected && !isRejected;
     }).length;
@@ -62,7 +62,7 @@ function Candidatestatus() {
   // **NEW: Get rejected candidates count (for better visibility)**
   const getRejectedCandidatesCount = () => {
     if (!filteredData || !filteredData.candidates || filteredData.candidates.length === 0) return 0;
-    
+
     return filteredData.candidates.filter(candidate => {
       return candidate.process_stages?.rejected === 'rejected';
     }).length;
@@ -82,14 +82,14 @@ function Candidatestatus() {
       const recruitmentsRes = await fetch('https://skilviu.com/backend/api/v1/recruitments');
       const recruitmentsData = Array.isArray(recruitmentsRes) ? recruitmentsRes :
         recruitmentsRes?.data && Array.isArray(recruitmentsRes.data) ? recruitmentsRes.data : [];
-      
+
       setRecruitments(recruitmentsData);
-      
+
       // Re-filter data with updated recruitment info
       if (candidates.length > 0) {
         filterDataByPosition(candidates, recruitmentsData);
       }
-      
+
       console.log('🔄 Recruitment data refreshed');
     } catch (error) {
       console.error('Error refreshing recruitment data:', error);
@@ -100,7 +100,7 @@ function Candidatestatus() {
   const checkAndTriggerJobClosure = async (jobId) => {
     try {
       console.log(`🔍 Checking job closure for job ${jobId}`);
-      
+
       // Call the job closure check endpoint
       const response = await fetch(`https://skilviu.com/backend/api/v1/job-closure/check-all`, {
         method: 'POST',
@@ -112,7 +112,7 @@ function Candidatestatus() {
       if (response.ok) {
         const result = await response.json();
         console.log('Job closure check result:', result);
-        
+
         if (result.closed_count > 0) {
           console.log(`✅ ${result.closed_count} job(s) were auto-closed`);
           // Refresh recruitment data to reflect changes
@@ -270,8 +270,30 @@ function Candidatestatus() {
   };
 
   // ========================= STATUS HELPERS =========================
+  // const getCurrentProcessStatus = (candidate) => {
+  //   if (!candidate.process_stages) return 'Pending: Screening';
+
+  //   if (candidate.process_stages.rejected === 'rejected') return 'Rejected';
+
+  //   let lastCompleted = -1;
+  //   for (let i = 0; i < orderedStages.length; i++) {
+  //     if (candidate.process_stages[orderedStages[i]] === 'completed') {
+  //       lastCompleted = i;
+  //     } else {
+  //       break;
+  //     }
+  //   }
+
+  //   if (lastCompleted === orderedStages.length - 1) return 'Process Complete';
+  //   if (lastCompleted >= 0) {
+  //     const nextStage = orderedStages[lastCompleted + 1];
+  //     const stageLabel = nextStage.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+  //     return `Pending: ${stageLabel}`;
+  //   }
+  //   return 'Pending: Screening';
+  // };
   const getCurrentProcessStatus = (candidate) => {
-    if (!candidate.process_stages) return 'Pending: Screening';
+    if (!candidate.process_stages) return 'Pending: Hr Interview';
 
     if (candidate.process_stages.rejected === 'rejected') return 'Rejected';
 
@@ -287,10 +309,18 @@ function Candidatestatus() {
     if (lastCompleted === orderedStages.length - 1) return 'Process Complete';
     if (lastCompleted >= 0) {
       const nextStage = orderedStages[lastCompleted + 1];
-      const stageLabel = nextStage.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+      // Map backend keys to new display labels
+      const stageLabelMap = {
+        'screening': 'Hr Interview',
+        'hr_interview': 'Client Cv Review',
+        'client_cv_review': 'Client Interview',
+        'client_interview': 'Offer Letter',
+        'offer_letter': 'Candidate Joined'
+      };
+      const stageLabel = stageLabelMap[nextStage] || nextStage.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
       return `Pending: ${stageLabel}`;
     }
-    return 'Pending: Screening';
+    return 'Pending: Hr Interview';
   };
 
   const hasProcessStarted = (candidate) => {
@@ -396,12 +426,12 @@ function Candidatestatus() {
   // Simple checkbox stage click handler
   const handleStageClick = (stageKey, candidateId) => {
     const currentValue = selectedCandidate.process_stages?.[stageKey];
-    
+
     // If already completed, do nothing
     if (currentValue === 'completed' || (stageKey === 'rejected' && currentValue === 'rejected')) {
       return;
     }
-    
+
     setStageToUpdate({ stage: stageKey, candidateId });
     setSelectedStage(stageKey);
   };
@@ -415,18 +445,18 @@ function Candidatestatus() {
 
     try {
       const statusValue = stageToUpdate.stage === 'rejected' ? 'rejected' : 'completed';
-      
+
       // Submit as 'completed' or 'rejected' for the selected stage
       await handleProcessStageChange(
-        stageToUpdate.candidateId, 
-        stageToUpdate.stage, 
+        stageToUpdate.candidateId,
+        stageToUpdate.stage,
         statusValue
       );
-      
+
       // Reset selection
       setStageToUpdate(null);
       setSelectedStage(null);
-      
+
     } catch (error) {
       console.error('Error updating progress:', error);
       alert('Failed to update progress');
@@ -460,7 +490,7 @@ function Candidatestatus() {
       // ENHANCED: Handle job auto-closure
       if (result.job_auto_closed) {
         alert(`✅ ${result.job_closure_message}`);
-        
+
         // Refresh recruitment data to reflect job closure
         console.log('🔄 Job was auto-closed, refreshing data...');
         await refreshRecruitmentData();
@@ -469,7 +499,7 @@ function Candidatestatus() {
       // ADDITIONAL: If offer_letter was completed, trigger manual job closure check
       if (stage === 'offer_letter' && status === 'completed') {
         console.log('🎯 Offer letter completed - checking if job should be closed');
-        
+
         // Get the job ID for this candidate
         const candidateJobId = filteredData?.recruitment?.job_id || filteredData?.recruitment?.id;
         if (candidateJobId) {
@@ -656,42 +686,41 @@ function Candidatestatus() {
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
             <div className="flex gap-2 w-full sm:w-auto flex-wrap">
               {/* Open Positions */}
-              <div className={`px-3 py-2 rounded-lg text-center flex-1 sm:flex-none min-w-0 border ${
-                isJobClosed ? 'bg-red-50 text-red-700 border-red-200' : 'bg-blue-50 text-blue-700 border-blue-200'
-              }`}>
+              <div className={`px-3 py-2 rounded-lg text-center flex-1 sm:flex-none min-w-0 border ${isJobClosed ? 'bg-red-50 text-red-700 border-red-200' : 'bg-blue-50 text-blue-700 border-blue-200'
+                }`}>
                 <div className="text-xs sm:text-sm font-medium">
                   {isJobClosed ? 'Closed Job' : 'Open Positions'}
                 </div>
                 <div className="text-lg sm:text-xl font-bold">{recruitment?.total_positions || 1}</div>
               </div>
-              
+
               {/* Applications */}
               <div className="bg-green-50 text-green-700 px-3 py-2 rounded-lg text-center flex-1 sm:flex-none min-w-0 border border-green-200">
                 <div className="text-xs sm:text-sm font-medium">Applications</div>
                 <div className="text-lg sm:text-xl font-bold">{positionCandidates.length}</div>
               </div>
-              
+
               {/* **FIXED: Selected Students Counter - Only offer_letter completed AND not rejected** */}
               <div className="bg-purple-50 text-purple-700 px-3 py-2 rounded-lg text-center flex-1 sm:flex-none min-w-0 border border-purple-200">
                 <div className="text-xs sm:text-sm font-medium">Selected</div>
                 <div className="text-lg sm:text-xl font-bold">{getSelectedStudentsCount()}</div>
                 <div className="text-xs text-purple-600">(Offer Done)</div>
               </div>
-              
+
               {/* In Process Counter */}
               <div className="bg-yellow-50 text-yellow-700 px-3 py-2 rounded-lg text-center flex-1 sm:flex-none min-w-0 border border-yellow-200">
                 <div className="text-xs sm:text-sm font-medium">In Process</div>
                 <div className="text-lg sm:text-xl font-bold">{getCandidatesInProcess()}</div>
                 <div className="text-xs text-yellow-600">(Under Review)</div>
               </div>
-              
+
               {/* **NEW: Rejected Counter** */}
               <div className="bg-red-50 text-red-700 px-3 py-2 rounded-lg text-center flex-1 sm:flex-none min-w-0 border border-red-200">
                 <div className="text-xs sm:text-sm font-medium">Rejected</div>
                 <div className="text-lg sm:text-xl font-bold">{getRejectedCandidatesCount()}</div>
                 <div className="text-xs text-red-600">(Not Selected)</div>
               </div>
-              
+
               {/* Positions Left Counter */}
               <div className="bg-orange-50 text-orange-700 px-3 py-2 rounded-lg text-center flex-1 sm:flex-none min-w-0 border border-orange-200">
                 <div className="text-xs sm:text-sm font-medium">Positions Left</div>
@@ -852,15 +881,14 @@ function Candidatestatus() {
                   return (
                     <div
                       key={candidateKey}
-                      className={`border rounded-lg transition-all ${
-                        candidateRejected
-                          ? 'border-red-300 bg-red-50'
-                          : candidateFullySelected
-                            ? 'border-green-400 bg-gradient-to-r from-green-50 to-green-100 shadow-lg'
-                            : isSelected
-                              ? 'border-blue-300 bg-blue-50'
-                              : 'border-gray-200 hover:border-blue-300 hover:shadow-sm'
-                      }`}
+                      className={`border rounded-lg transition-all ${candidateRejected
+                        ? 'border-red-300 bg-red-50'
+                        : candidateFullySelected
+                          ? 'border-green-400 bg-gradient-to-r from-green-50 to-green-100 shadow-lg'
+                          : isSelected
+                            ? 'border-blue-300 bg-blue-50'
+                            : 'border-gray-200 hover:border-blue-300 hover:shadow-sm'
+                        }`}
                     >
                       {/* **FIXED: Selected Banner for fully selected candidates only (not rejected)** */}
                       {candidateFullySelected && !candidateRejected && (
@@ -949,23 +977,22 @@ function Candidatestatus() {
                             {(isSelected || processStarted || candidateFullySelected || candidateRejected) && (
                               <div className="text-xs text-center flex-1 sm:flex-none">
                                 <div className="mb-1 font-medium text-gray-700">Status:</div>
-                                <div className={`font-medium ${
-                                  candidateRejected
-                                    ? 'text-red-700'
+                                <div className={`font-medium ${candidateRejected
+                                  ? 'text-red-700'
+                                  : candidateFullySelected
+                                    ? 'text-green-700'
+                                    : getCurrentProcessStatus(candidate) === 'Rejected'
+                                      ? 'text-red-700'
+                                      : 'text-purple-700'
+                                  }`}>
+                                  {candidateRejected
+                                    ? 'Rejected ❌'
                                     : candidateFullySelected
-                                      ? 'text-green-700'
-                                      : getCurrentProcessStatus(candidate) === 'Rejected'
-                                        ? 'text-red-700'
-                                        : 'text-purple-700'
-                                }`}>
-                                  {candidateRejected 
-                                    ? 'Rejected ❌' 
-                                    : candidateFullySelected 
-                                      ? 'Hired ✅' 
+                                      ? 'Hired ✅'
                                       : getCurrentProcessStatus(candidate)
                                   }
                                 </div>
-                                
+
                                 {!isJobClosed && (
                                   <button
                                     onClick={() => {
@@ -1064,7 +1091,7 @@ function Candidatestatus() {
                     <div className="text-3xl">❌</div>
                     <div>
                       <h4 className="text-lg font-bold text-red-800 flex items-center gap-2">
-                        ❌ REJECTED CANDIDATE 
+                        ❌ REJECTED CANDIDATE
                         <span className="text-sm font-normal bg-red-200 text-red-800 px-2 py-1 rounded-full">Not Selected</span>
                       </h4>
                       <p className="text-sm text-red-700 mb-2">
@@ -1088,7 +1115,7 @@ function Candidatestatus() {
                     <div className="text-3xl">🏆</div>
                     <div>
                       <h4 className="text-lg font-bold text-green-800 flex items-center gap-2">
-                        🎉 SELECTED CANDIDATE 
+                        🎉 SELECTED CANDIDATE
                         <span className="text-sm font-normal bg-green-200 text-green-800 px-2 py-1 rounded-full">Position Filled</span>
                       </h4>
                       <p className="text-sm text-green-700 mb-2">
@@ -1140,14 +1167,22 @@ function Candidatestatus() {
               {/* Process Stages with Simple Checkbox System */}
               <div className="mb-6">
                 <h4 className="text-base sm:text-lg font-semibold text-gray-800 mb-4 sm:mb-6">Hiring Process Stages</h4>
-                
+
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
-                  {[
+                  {/* {[
                     { label: 'Screening', key: 'screening', color: 'blue', icon: '📋' },
                     { label: 'HR Interview', key: 'hr_interview', color: 'green', icon: '👥' },
                     { label: 'Client CV Review', key: 'client_cv_review', color: 'yellow', icon: '📄' },
                     { label: 'Client Interview', key: 'client_interview', color: 'purple', icon: '🤝' },
                     { label: 'Offer Letter', key: 'offer_letter', color: 'red', icon: '📝' },
+                    { label: 'Rejected', key: 'rejected', color: 'gray', icon: '🚫' },
+                  ].map((step, idx) => { */}
+                  {[
+                    { label: 'Hr Interview', key: 'screening', color: 'blue', icon: '📋' },
+                    { label: 'Client Cv Review', key: 'hr_interview', color: 'green', icon: '👥' },
+                    { label: 'Client Interview', key: 'client_cv_review', color: 'yellow', icon: '📄' },
+                    { label: 'Offer Letter', key: 'client_interview', color: 'purple', icon: '🤝' },
+                    { label: 'Candidate Joined', key: 'offer_letter', color: 'red', icon: '📝' },
                     { label: 'Rejected', key: 'rejected', color: 'gray', icon: '🚫' },
                   ].map((step, idx) => {
                     const currentValue = selectedCandidate.process_stages?.[step.key];
@@ -1174,19 +1209,17 @@ function Candidatestatus() {
                     }
 
                     return (
-                      <div 
-                        key={step.key} 
-                        className={`p-3 sm:p-4 border-2 rounded-lg transition-all ${
-                          canClick && !isJobClosed ? 'cursor-pointer' : 'cursor-not-allowed'
-                        } ${
-                          isCompleted
+                      <div
+                        key={step.key}
+                        className={`p-3 sm:p-4 border-2 rounded-lg transition-all ${canClick && !isJobClosed ? 'cursor-pointer' : 'cursor-not-allowed'
+                          } ${isCompleted
                             ? (step.key === 'rejected' ? 'border-red-500 bg-red-50' : 'border-green-500 bg-green-50')
                             : isSelected
                               ? 'border-blue-500 bg-blue-100 ring-2 ring-blue-200'
                               : canClick && !isJobClosed
                                 ? 'border-gray-300 bg-gray-50 hover:border-blue-300 hover:bg-blue-50'
                                 : 'border-gray-200 bg-gray-100 opacity-60'
-                        }`}
+                          }`}
                         onClick={() => canClick && !isJobClosed && handleStageClick(step.key, candidateId)}
                       >
                         <div className="text-center mb-3">
@@ -1214,21 +1247,20 @@ function Candidatestatus() {
                             )}
                           </div>
 
-                          <div className={`text-xs sm:text-sm font-medium ${
-                            isCompleted
-                              ? (step.key === 'rejected' ? 'text-red-700' : 'text-green-700')
+                          <div className={`text-xs sm:text-sm font-medium ${isCompleted
+                            ? (step.key === 'rejected' ? 'text-red-700' : 'text-green-700')
+                            : isSelected
+                              ? 'text-blue-700'
+                              : canClick && !isJobClosed
+                                ? 'text-blue-600'
+                                : 'text-gray-500'
+                            }`}>
+                            {isCompleted
+                              ? (step.key === 'rejected' ? 'Rejected' : 'Completed')
                               : isSelected
-                                ? 'text-blue-700'
-                                : canClick && !isJobClosed
-                                  ? 'text-blue-600'
-                                  : 'text-gray-500'
-                          }`}>
-                            {isCompleted 
-                              ? (step.key === 'rejected' ? 'Rejected' : 'Completed') 
-                              : isSelected 
                                 ? 'Selected - Click Submit'
                                 : canClick && !isJobClosed
-                                  ? 'Click to Select' 
+                                  ? 'Click to Select'
                                   : isJobClosed
                                     ? 'Job Closed'
                                     : 'Waiting'
@@ -1251,21 +1283,38 @@ function Candidatestatus() {
                 {stageToUpdate && !isJobClosed && (
                   <div className="mt-6 p-4 border-2 border-blue-300 rounded-lg bg-blue-50">
                     <div className="text-center">
-                      <h5 className="font-semibold text-gray-800 mb-3">
+                      {/* <h5 className="font-semibold text-gray-800 mb-3">
                         Ready to mark "{stageToUpdate.stage.replace('_', ' ').toUpperCase()}" as completed?
+                      </h5> */}<h5 className="font-semibold text-gray-800 mb-3">
+                        Ready to mark "{
+                          stageToUpdate.stage === 'screening' ? 'HR INTERVIEW' :
+                            stageToUpdate.stage === 'hr_interview' ? 'CLIENT CV REVIEW' :
+                              stageToUpdate.stage === 'client_cv_review' ? 'CLIENT INTERVIEW' :
+                                stageToUpdate.stage === 'client_interview' ? 'OFFER LETTER' :
+                                  stageToUpdate.stage === 'offer_letter' ? 'CANDIDATE JOINED' :
+                                    stageToUpdate.stage === 'rejected' ? 'REJECTED' :
+                                      stageToUpdate.stage.replace('_', ' ').toUpperCase()
+                        }" as completed?
                       </h5>
                       
-                      {stageToUpdate.stage === 'offer_letter' && (
+
+                      {/* {stageToUpdate.stage === 'offer_letter' && (
                         <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded">
                           <p className="text-sm text-yellow-800 mb-2">
                             ⚠️ <strong>Important:</strong> Completing the offer letter will mark this candidate as SELECTED for the position.
+                          </p> */}
+                      {stageToUpdate.stage === 'offer_letter' && (
+                        <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded">
+                          <p className="text-sm text-yellow-800 mb-2">
+                            ⚠️ <strong>Important:</strong> Completing "Candidate Joined" means this candidate has officially joined the company and the position is filled.
                           </p>
+
                           <div className="text-xs text-yellow-700">
                             <strong>Current Status:</strong> {getSelectedStudentsCount()} selected • {getPositionsLeft()} positions left
                           </div>
                         </div>
                       )}
-                      
+
                       <div className="flex justify-center gap-3">
                         <button
                           onClick={handleProgressSubmit}
@@ -1273,7 +1322,7 @@ function Candidatestatus() {
                         >
                           ✅ Submit & Complete Stage
                         </button>
-                        
+
                         <button
                           onClick={() => {
                             setStageToUpdate(null);
@@ -1295,17 +1344,24 @@ function Candidatestatus() {
                     {orderedStages.map((stage, idx) => {
                       const isCompleted = selectedCandidate.process_stages?.[stage] === 'completed';
                       const isNext = !isCompleted && (idx === 0 || selectedCandidate.process_stages?.[orderedStages[idx - 1]] === 'completed');
-                      
+
                       return (
                         <React.Fragment key={stage}>
-                          <div className={`px-2 py-1 rounded text-xs ${
-                            isCompleted 
-                              ? 'bg-green-100 text-green-800' 
-                              : isNext && !isJobClosed
-                                ? 'bg-blue-100 text-blue-800'
-                                : 'bg-gray-100 text-gray-500'
-                          }`}>
-                            {isCompleted ? '✅' : isNext && !isJobClosed ? '⏳' : '⭕'} {stage.replace('_', ' ')}
+                          <div className={`px-2 py-1 rounded text-xs ${isCompleted
+                            ? 'bg-green-100 text-green-800'
+                            : isNext && !isJobClosed
+                              ? 'bg-blue-100 text-blue-800'
+                              : 'bg-gray-100 text-gray-500'
+                            }`}>
+                            {/* {isCompleted ? '✅' : isNext && !isJobClosed ? '⏳' : '⭕'} {stage.replace('_', ' ')} */}
+                            {isCompleted ? '✅' : isNext && !isJobClosed ? '⏳' : '⭕'} {
+                              stage === 'screening' ? 'Hr Interview' :
+                                stage === 'hr_interview' ? 'Client Cv Review' :
+                                  stage === 'client_cv_review' ? 'Client Interview' :
+                                    stage === 'client_interview' ? 'Offer Letter' :
+                                      stage === 'offer_letter' ? 'Candidate Joined' :
+                                        stage.replace('_', ' ')
+                            }
                           </div>
                           {idx < orderedStages.length - 1 && (
                             <span className="text-gray-400">→</span>

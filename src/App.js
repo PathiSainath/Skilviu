@@ -72,6 +72,7 @@ import Scams from './Components/Scams';
 import TaskAssign from './Components/Admin/Taskassign';
 import Referredfriend from './Components/Hrteam/Referredfriend';
 import FeedbackList from './Components/Admin/Feedbacklist';
+import AdminScams from './Components/Admin/AdminScams';
 
 function App() {
   return (
@@ -133,6 +134,7 @@ function MainLayout() {
           <Route path="candidateform-page" element={<Candidateform_page />} />
           <Route path='task-assign' element={<TaskAssign />} />
           <Route path="/admindashboard/feedbacks" element={<FeedbackList />} />
+          <Route path="/admindashboard/Scams" element={<AdminScams/>} />
         </Route>
 
         {/* Business Dashboard */}
