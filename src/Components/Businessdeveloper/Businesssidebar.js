@@ -1,20 +1,22 @@
 import React from 'react';
-import { NavLink } from 'react-router-dom';
-
-// Lucide Icons
-import {
-  Home,
-  ClipboardList,
-  FileSignature,
-  FileText,
-  LogOut,
-} from 'lucide-react';
+import { NavLink, useNavigate } from 'react-router-dom';
+import { Home, ClipboardList, FileSignature, FileText, LogOut } from 'lucide-react';
+import { useAuth } from '../AuthContext'; // ✅ import auth
 
 const navItemClass = ({ isActive }) =>
-  `flex items-center px-2 py-1 rounded-md transition-colors duration-200 ${isActive ? 'text-purple-600 font-semibold' : 'text-gray-500 hover:text-purple-600'
+  `flex items-center px-2 py-1 rounded-md transition-colors duration-200 ${
+    isActive ? 'text-purple-600 font-semibold' : 'text-gray-500 hover:text-purple-600'
   }`;
 
 const BusinessSidebar = () => {
+  const { logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();  
+    navigate('/login', { replace: true });
+  };
+
   return (
     <aside className="h-full bg-white shadow p-6 flex flex-col justify-between">
       <div>
@@ -33,31 +35,27 @@ const BusinessSidebar = () => {
             <FileSignature className="mr-2 w-4 h-4" />
             CR FORM
           </NavLink>
-          <NavLink to="/businessdashboard/clientformedit/:id" className={navItemClass}>
+          {/* ⚠️ Remove :id here — NavLink should not include dynamic params */}
+          <NavLink to="/businessdashboard/clientformedit" className={navItemClass}>
             <FileText className="mr-2 w-4 h-4" />
             CO FORM Edit
           </NavLink>
-          <NavLink to="/businessdashboard/formedit/:id" className={navItemClass}>
+          <NavLink to="/businessdashboard/formedit" className={navItemClass}>
             <FileText className="mr-2 w-4 h-4" />
             CR FORM Edit
           </NavLink>
         </nav>
       </div>
 
-      <NavLink
-        to="/login"
+      <button
+        onClick={handleLogout}
         className="flex items-center text-red-600 font-semibold mt-8 hover:underline"
       >
         <LogOut className="mr-2 w-4 h-4" />
         Logout
-      </NavLink>
+      </button>
     </aside>
   );
 };
 
 export default BusinessSidebar;
-
-
-
-
-

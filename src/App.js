@@ -12,6 +12,9 @@ import {
   Link,
 } from 'react-router-dom';
 import { Menu, Home, FileText, UserCheck, LogOut } from 'lucide-react';
+import PrivateRoute from "../src/Components/PrivateRoute";
+import { useAuth } from "../src/Components/AuthContext";
+
 
 import ScrollToTop from './Components/ScrollToTop';
 import Navbar from './Components/Navbar';
@@ -129,120 +132,125 @@ function MainLayout() {
         <Route path="/candidateform" element={<Candidateform />} />
 
         {/* Admin Dashboard */}
-        <Route path="/admindashboard" element={<AdmindashboardLayout />}>
-          <Route index element={<AdminDashboardHome />} />
-          <Route path="candidateform-page" element={<Candidateform_page />} />
-          <Route path='task-assign' element={<TaskAssign />} />
-          <Route path="/admindashboard/feedbacks" element={<FeedbackList />} />
-          <Route path="/admindashboard/Scams" element={<AdminScams/>} />
+        <Route element={<PrivateRoute allowedRoles={["Admin"]} />}>
+          <Route path="/admindashboard" element={<AdmindashboardLayout />}>
+            <Route index element={<AdminDashboardHome />} />
+            <Route path="candidateform-page" element={<Candidateform_page />} />
+            <Route path="task-assign" element={<TaskAssign />} />
+            <Route path="feedbacks" element={<FeedbackList />} />
+            <Route path="scams" element={<AdminScams />} />
+          </Route>
         </Route>
 
         {/* Business Dashboard */}
-        <Route path="/businessdashboard" element={<BusinessdashboardLayout />}>
-          <Route index element={<BusinessDashboardHome />} />
-          <Route path="clientform-page" element={<BD_Clientform />} />
-          <Route path="recruitment-page" element={<BD_RecruitmentPage />} />
-          <Route path='formedit/:id' element={<Formedit />} />
-          <Route path="clientformedit/:id" element={<Clientformedit />} />
+        <Route element={<PrivateRoute allowedRoles={["Bdm"]} />}>
+          <Route path="/businessdashboard" element={<BusinessdashboardLayout />}>
+            <Route index element={<BusinessDashboardHome />} />
+            <Route path="clientform-page" element={<BD_Clientform />} />
+            <Route path="recruitment-page" element={<BD_RecruitmentPage />} />
+            <Route path="formedit/:id" element={<Formedit />} />
+            <Route path="clientformedit/:id" element={<Clientformedit />} />
+          </Route>
         </Route>
 
         {/* HR Team Dashboard */}
-        <Route path="/hrteamdashboard" element={<HrteamdashboardLayout />}>
-          <Route index element={<HrteamDashboardHome />} />
-          <Route path="candidateform-page" element={<Candidateform_page />} />
-          <Route path="candidatestatus" element={<Candidatestatus />} />
-          <Route path="positions" element={<Positions />} />
-          <Route path="candidatestatus/:jobTitle" element={<Candidatestatus />} />
-          <Route path='referred-friends' element={<Referredfriend />} />
+        <Route element={<PrivateRoute allowedRoles={["Hrteam"]} />}>
+          <Route path="/hrteamdashboard" element={<HrteamdashboardLayout />}>
+            <Route index element={<HrteamDashboardHome />} />
+            <Route path="candidateform-page" element={<Candidateform_page />} />
+            <Route path="candidatestatus" element={<Candidatestatus />} />
+            <Route path="positions" element={<Positions />} />
+            <Route path="candidatestatus/:jobTitle" element={<Candidatestatus />} />
+            <Route path="referred-friends" element={<Referredfriend />} />
+          </Route>
         </Route>
-      </Routes>
-
-      {!isAdminRoute && !isBusinessRoute && !isHrteamRoute && <Footer />}
-      {!isAdminRoute && !isBusinessRoute && !isHrteamRoute && <Disclaimer />}
-    </>
-  );
+        </Routes>
+        {!isAdminRoute && !isBusinessRoute && !isHrteamRoute && <Footer />}
+        {!isAdminRoute && !isBusinessRoute && !isHrteamRoute && <Disclaimer />}
+      </>
+      );
 }
 
-// Admin Layout
-function AdmindashboardLayout() {
+      // Admin Layout
+      function AdmindashboardLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  return (
-    <div className="flex flex-col md:flex-row min-h-screen bg-gray-50 font-sans">
-      <div className="md:hidden flex items-center justify-between bg-white px-4 py-3 shadow">
-        <h1 className="text-lg font-bold text-blue-900">Skilviu</h1>
-        <button onClick={() => setSidebarOpen(!sidebarOpen)}>
-          <Menu className="w-6 h-6" />
-        </button>
-      </div>
-
-      <aside className={`fixed top-0 left-0 z-40 h-full w-64 bg-white shadow-md transform transition-transform duration-300 ease-in-out
-        ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 md:relative md:w-60 md:flex`}>
-        <div className="h-full overflow-y-auto pt-16 md:pt-0">
-          <Admindashboard />
+      return (
+      <div className="flex flex-col md:flex-row min-h-screen bg-gray-50 font-sans">
+        <div className="md:hidden flex items-center justify-between bg-white px-4 py-3 shadow">
+          <h1 className="text-lg font-bold text-blue-900">Skilviu</h1>
+          <button onClick={() => setSidebarOpen(!sidebarOpen)}>
+            <Menu className="w-6 h-6" />
+          </button>
         </div>
-      </aside>
 
-      <main className="flex-1 p-4 md:p-6 mt-16 md:mt-0 overflow-y-auto">
-        <Outlet />
-      </main>
-    </div>
-  );
+        <aside className={`fixed top-0 left-0 z-40 h-full w-64 bg-white shadow-md transform transition-transform duration-300 ease-in-out
+        ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 md:relative md:w-60 md:flex`}>
+          <div className="h-full overflow-y-auto pt-16 md:pt-0">
+            <Admindashboard />
+          </div>
+        </aside>
+
+        <main className="flex-1 p-4 md:p-6 mt-16 md:mt-0 overflow-y-auto">
+          <Outlet />
+        </main>
+      </div>
+      );
 }
 
-// Business Layout
-function BusinessdashboardLayout() {
+      // Business Layout
+      function BusinessdashboardLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  return (
-    <div className="flex flex-col md:flex-row min-h-screen bg-gray-50 font-sans">
-      <div className="md:hidden flex items-center justify-between bg-white px-4 py-3 shadow">
-        <h1 className="text-lg font-bold text-blue-900">Skilviu - Business</h1>
-        <button onClick={() => setSidebarOpen(!sidebarOpen)}>
-          <Menu className="w-6 h-6" />
-        </button>
-      </div>
-
-      <aside className={`fixed top-0 left-0 z-40 h-full w-64 bg-white shadow-md transform transition-transform duration-300 ease-in-out
-        ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 md:relative md:w-60 md:flex`}>
-        <div className="h-full overflow-y-auto pt-16 md:pt-0">
-          <Businessdashboard />
+      return (
+      <div className="flex flex-col md:flex-row min-h-screen bg-gray-50 font-sans">
+        <div className="md:hidden flex items-center justify-between bg-white px-4 py-3 shadow">
+          <h1 className="text-lg font-bold text-blue-900">Skilviu - Business</h1>
+          <button onClick={() => setSidebarOpen(!sidebarOpen)}>
+            <Menu className="w-6 h-6" />
+          </button>
         </div>
-      </aside>
 
-      <main className="flex-1 p-4 md:p-6 mt-16 md:mt-0 overflow-y-auto">
-        <Outlet />
-      </main>
-    </div>
-  );
+        <aside className={`fixed top-0 left-0 z-40 h-full w-64 bg-white shadow-md transform transition-transform duration-300 ease-in-out
+        ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 md:relative md:w-60 md:flex`}>
+          <div className="h-full overflow-y-auto pt-16 md:pt-0">
+            <Businessdashboard />
+          </div>
+        </aside>
+
+        <main className="flex-1 p-4 md:p-6 mt-16 md:mt-0 overflow-y-auto">
+          <Outlet />
+        </main>
+      </div>
+      );
 }
 
-// ✅ HR Team Layout - NOW CONSISTENT WITH ADMIN/BUSINESS
-function HrteamdashboardLayout() {
+      // ✅ HR Team Layout - NOW CONSISTENT WITH ADMIN/BUSINESS
+      function HrteamdashboardLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  return (
-    <div className="flex flex-col md:flex-row min-h-screen bg-gray-50 font-sans">
-      <div className="md:hidden flex items-center justify-between bg-white px-4 py-3 shadow">
-        <h1 className="text-lg font-bold text-blue-900">Skilviu - HR Team</h1>
-        <button onClick={() => setSidebarOpen(!sidebarOpen)}>
-          <Menu className="w-6 h-6" />
-        </button>
-      </div>
-
-      <aside className={`fixed top-0 left-0 z-40 h-full w-64 bg-white shadow-md transform transition-transform duration-300 ease-in-out
-        ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 md:relative md:w-60 md:flex`}>
-        <div className="h-full overflow-y-auto pt-16 md:pt-0">
-          <Hrteamdashboard />
+      return (
+      <div className="flex flex-col md:flex-row min-h-screen bg-gray-50 font-sans">
+        <div className="md:hidden flex items-center justify-between bg-white px-4 py-3 shadow">
+          <h1 className="text-lg font-bold text-blue-900">Skilviu - HR Team</h1>
+          <button onClick={() => setSidebarOpen(!sidebarOpen)}>
+            <Menu className="w-6 h-6" />
+          </button>
         </div>
-      </aside>
 
-      <main className="flex-1 p-4 md:p-6 mt-16 md:mt-0 overflow-y-auto">
-        <Outlet />
-      </main>
-    </div>
-  );
+        <aside className={`fixed top-0 left-0 z-40 h-full w-64 bg-white shadow-md transform transition-transform duration-300 ease-in-out
+        ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 md:relative md:w-60 md:flex`}>
+          <div className="h-full overflow-y-auto pt-16 md:pt-0">
+            <Hrteamdashboard />
+          </div>
+        </aside>
+
+        <main className="flex-1 p-4 md:p-6 mt-16 md:mt-0 overflow-y-auto">
+          <Outlet />
+        </main>
+      </div>
+      );
 }
 
-export { HrteamdashboardLayout };
-export default App;
+      export {HrteamdashboardLayout};
+      export default App;
