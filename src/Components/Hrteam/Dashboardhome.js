@@ -146,7 +146,7 @@ const Dashboardhome = () => {
     setClientsError(null);
   };
 
-  // Fetch task assignments and filter for HR team only
+  // ✅ FIXED: Fetch task assignments and filter for HR team only
   const fetchTaskNotifications = async (showLoader = false) => {
     if (showLoader) setNotificationsLoading(true);
     
@@ -183,7 +183,7 @@ const Dashboardhome = () => {
             title: `New Task: ${task.job?.job_title || 'Recruitment Task'}`,
             message: `${task.message} - Deadline: ${formatDate(task.deadline)}`,
             time: formatRelativeTime(task.created_at),
-            read: false,
+            read: false, // ✅ Set to false initially
             taskData: {
               taskId: task.task_assign_id,
               assignedTo: task.assigned_to,
@@ -198,16 +198,30 @@ const Dashboardhome = () => {
           };
         });
 
+        // ✅ Get read notifications from localStorage
         const readNotifications = JSON.parse(localStorage.getItem('hr_readNotifications') || '[]');
+        
+        // ✅ Update read status for notifications
         const updatedNotifications = taskNotifications.map(notification => ({
           ...notification,
           read: readNotifications.includes(notification.id)
         }));
 
+        // ✅ Sort notifications by time (newest first)
         updatedNotifications.sort((a, b) => new Date(b.time) - new Date(a.time));
         
+        // ✅ Calculate unread count AFTER updating read status
+        const unreadNotificationsCount = updatedNotifications.filter(n => !n.read).length;
+        
+        // ✅ Update states
         setNotifications(updatedNotifications);
-        setUnreadCount(updatedNotifications.filter(n => !n.read).length);
+        setUnreadCount(unreadNotificationsCount); // ✅ Use calculated count
+        
+        console.log('✅ Notifications updated:', {
+          total: updatedNotifications.length,
+          unread: unreadNotificationsCount,
+          readFromStorage: readNotifications.length
+        });
       }
     } catch (error) {
       console.error('Error fetching HR team task notifications:', error);
@@ -384,27 +398,44 @@ const Dashboardhome = () => {
     return () => clearInterval(interval);
   }, []);
 
+  // ✅ FIXED: markNotificationAsRead function
   const markNotificationAsRead = (id) => {
-    setNotifications(notifications.map(notif => 
+    // ✅ Update notifications state
+    const updatedNotifications = notifications.map(notif => 
       notif.id === id ? { ...notif, read: true } : notif
-    ));
-    setUnreadCount(prev => Math.max(0, prev - 1));
+    );
     
+    setNotifications(updatedNotifications);
+    
+    // ✅ Calculate new unread count from updated notifications
+    const newUnreadCount = updatedNotifications.filter(n => !n.read).length;
+    setUnreadCount(newUnreadCount);
+    
+    // ✅ Update localStorage
     const readNotifications = JSON.parse(localStorage.getItem('hr_readNotifications') || '[]');
     if (!readNotifications.includes(id)) {
       readNotifications.push(id);
       localStorage.setItem('hr_readNotifications', JSON.stringify(readNotifications));
     }
+    
+    console.log('✅ Notification marked as read:', { id, newUnreadCount });
   };
 
+  // ✅ FIXED: markAllAsRead function
   const markAllAsRead = () => {
+    // ✅ Mark all notifications as read
+    const updatedNotifications = notifications.map(n => ({ ...n, read: true }));
     const allIds = notifications.map(n => n.id);
-    setNotifications(notifications.map(n => ({ ...n, read: true })));
-    setUnreadCount(0);
     
+    setNotifications(updatedNotifications);
+    setUnreadCount(0); // ✅ Set to 0 explicitly
+    
+    // ✅ Update localStorage
     const readNotifications = JSON.parse(localStorage.getItem('hr_readNotifications') || '[]');
     const updatedRead = [...new Set([...readNotifications, ...allIds])];
     localStorage.setItem('hr_readNotifications', JSON.stringify(updatedRead));
+    
+    console.log('✅ All notifications marked as read');
   };
 
   const getNotificationIcon = (type, priority) => {
@@ -475,7 +506,7 @@ const Dashboardhome = () => {
           Welcome to the HR Team Dashboard
         </h1>
         
-        {/* Notification Bell */}
+        {/* 🔥 UPDATED: Notification Bell with Fixed Badge Style */}
         <div className="relative">
           <button
             onClick={() => setShowNotifications(!showNotifications)}
@@ -486,9 +517,10 @@ const Dashboardhome = () => {
             ) : (
               <Bell className="w-6 h-6 text-gray-600" />
             )}
+            {/* 🔥 UPDATED: Fixed Badge Style to Match Your Image */}
             {unreadCount > 0 && (
-              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                {unreadCount > 9 ? '9+' : unreadCount}
+              <span className="absolute -top-0.5 -right-0.5 bg-red-500 text-white text-xs font-semibold rounded-full min-w-[18px] h-[18px] flex items-center justify-center border-2 border-white shadow-sm">
+                {unreadCount > 99 ? '99+' : unreadCount}
               </span>
             )}
           </button>

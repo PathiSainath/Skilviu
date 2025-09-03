@@ -35,12 +35,11 @@ const BusinessSidebar = () => {
             <FileSignature className="mr-2 w-4 h-4" />
             CR FORM
           </NavLink>
-          {/* ⚠️ Remove :id here — NavLink should not include dynamic params */}
-          <NavLink to="/businessdashboard/clientformedit" className={navItemClass}>
+          <NavLink to="/businessdashboard/clientformedit/:id" className={navItemClass}>
             <FileText className="mr-2 w-4 h-4" />
             CO FORM Edit
           </NavLink>
-          <NavLink to="/businessdashboard/formedit" className={navItemClass}>
+          <NavLink to="/businessdashboard/formedit/:id" className={navItemClass}>
             <FileText className="mr-2 w-4 h-4" />
             CR FORM Edit
           </NavLink>

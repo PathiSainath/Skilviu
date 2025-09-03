@@ -76,12 +76,16 @@ import TaskAssign from './Components/Admin/Taskassign';
 import Referredfriend from './Components/Hrteam/Referredfriend';
 import FeedbackList from './Components/Admin/Feedbacklist';
 import AdminScams from './Components/Admin/AdminScams';
+import { AuthProvider } from './Components/AuthContext';
+
 
 function App() {
   return (
     <Router>
-      <ScrollToTop />
-      <MainLayout />
+      <AuthProvider>   {/* ✅ wrap inside Router */}
+        <ScrollToTop />
+        <MainLayout />
+      </AuthProvider>
     </Router>
   );
 }
@@ -91,6 +95,7 @@ function MainLayout() {
   const isAdminRoute = location.pathname.startsWith('/admindashboard');
   const isBusinessRoute = location.pathname.startsWith('/businessdashboard');
   const isHrteamRoute = location.pathname.startsWith('/hrteamdashboard');
+  const isLoginRoute = location.pathname.startsWith('/login');
 
   return (
     <>
@@ -164,93 +169,95 @@ function MainLayout() {
             <Route path="referred-friends" element={<Referredfriend />} />
           </Route>
         </Route>
-        </Routes>
-        {!isAdminRoute && !isBusinessRoute && !isHrteamRoute && <Footer />}
-        {!isAdminRoute && !isBusinessRoute && !isHrteamRoute && <Disclaimer />}
-      </>
-      );
+      </Routes>
+ 
+      {!isAdminRoute && !isBusinessRoute && !isHrteamRoute && <Footer />}
+      {!isAdminRoute && !isBusinessRoute && !isHrteamRoute && !isLoginRoute && <Disclaimer />}
+
+    </>
+  );
 }
 
-      // Admin Layout
-      function AdmindashboardLayout() {
+// Admin Layout
+function AdmindashboardLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-      return (
-      <div className="flex flex-col md:flex-row min-h-screen bg-gray-50 font-sans">
-        <div className="md:hidden flex items-center justify-between bg-white px-4 py-3 shadow">
-          <h1 className="text-lg font-bold text-blue-900">Skilviu</h1>
-          <button onClick={() => setSidebarOpen(!sidebarOpen)}>
-            <Menu className="w-6 h-6" />
-          </button>
-        </div>
-
-        <aside className={`fixed top-0 left-0 z-40 h-full w-64 bg-white shadow-md transform transition-transform duration-300 ease-in-out
-        ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 md:relative md:w-60 md:flex`}>
-          <div className="h-full overflow-y-auto pt-16 md:pt-0">
-            <Admindashboard />
-          </div>
-        </aside>
-
-        <main className="flex-1 p-4 md:p-6 mt-16 md:mt-0 overflow-y-auto">
-          <Outlet />
-        </main>
+  return (
+    <div className="flex flex-col md:flex-row min-h-screen bg-gray-50 font-sans">
+      <div className="md:hidden flex items-center justify-between bg-white px-4 py-3 shadow">
+        <h1 className="text-lg font-bold text-blue-900">Skilviu</h1>
+        <button onClick={() => setSidebarOpen(!sidebarOpen)}>
+          <Menu className="w-6 h-6" />
+        </button>
       </div>
-      );
+
+      <aside className={`fixed top-0 left-0 z-40 h-full w-64 bg-white shadow-md transform transition-transform duration-300 ease-in-out
+        ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 md:relative md:w-60 md:flex`}>
+        <div className="h-full overflow-y-auto pt-16 md:pt-0">
+          <Admindashboard />
+        </div>
+      </aside>
+
+      <main className="flex-1 p-4 md:p-6 mt-16 md:mt-0 overflow-y-auto">
+        <Outlet />
+      </main>
+    </div>
+  );
 }
 
-      // Business Layout
-      function BusinessdashboardLayout() {
+// Business Layout
+function BusinessdashboardLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-      return (
-      <div className="flex flex-col md:flex-row min-h-screen bg-gray-50 font-sans">
-        <div className="md:hidden flex items-center justify-between bg-white px-4 py-3 shadow">
-          <h1 className="text-lg font-bold text-blue-900">Skilviu - Business</h1>
-          <button onClick={() => setSidebarOpen(!sidebarOpen)}>
-            <Menu className="w-6 h-6" />
-          </button>
-        </div>
-
-        <aside className={`fixed top-0 left-0 z-40 h-full w-64 bg-white shadow-md transform transition-transform duration-300 ease-in-out
-        ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 md:relative md:w-60 md:flex`}>
-          <div className="h-full overflow-y-auto pt-16 md:pt-0">
-            <Businessdashboard />
-          </div>
-        </aside>
-
-        <main className="flex-1 p-4 md:p-6 mt-16 md:mt-0 overflow-y-auto">
-          <Outlet />
-        </main>
+  return (
+    <div className="flex flex-col md:flex-row min-h-screen bg-gray-50 font-sans">
+      <div className="md:hidden flex items-center justify-between bg-white px-4 py-3 shadow">
+        <h1 className="text-lg font-bold text-blue-900">Skilviu - Business</h1>
+        <button onClick={() => setSidebarOpen(!sidebarOpen)}>
+          <Menu className="w-6 h-6" />
+        </button>
       </div>
-      );
+
+      <aside className={`fixed top-0 left-0 z-40 h-full w-64 bg-white shadow-md transform transition-transform duration-300 ease-in-out
+        ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 md:relative md:w-60 md:flex`}>
+        <div className="h-full overflow-y-auto pt-16 md:pt-0">
+          <Businessdashboard />
+        </div>
+      </aside>
+
+      <main className="flex-1 p-4 md:p-6 mt-16 md:mt-0 overflow-y-auto">
+        <Outlet />
+      </main>
+    </div>
+  );
 }
 
-      // ✅ HR Team Layout - NOW CONSISTENT WITH ADMIN/BUSINESS
-      function HrteamdashboardLayout() {
+// ✅ HR Team Layout - NOW CONSISTENT WITH ADMIN/BUSINESS
+function HrteamdashboardLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-      return (
-      <div className="flex flex-col md:flex-row min-h-screen bg-gray-50 font-sans">
-        <div className="md:hidden flex items-center justify-between bg-white px-4 py-3 shadow">
-          <h1 className="text-lg font-bold text-blue-900">Skilviu - HR Team</h1>
-          <button onClick={() => setSidebarOpen(!sidebarOpen)}>
-            <Menu className="w-6 h-6" />
-          </button>
-        </div>
-
-        <aside className={`fixed top-0 left-0 z-40 h-full w-64 bg-white shadow-md transform transition-transform duration-300 ease-in-out
-        ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 md:relative md:w-60 md:flex`}>
-          <div className="h-full overflow-y-auto pt-16 md:pt-0">
-            <Hrteamdashboard />
-          </div>
-        </aside>
-
-        <main className="flex-1 p-4 md:p-6 mt-16 md:mt-0 overflow-y-auto">
-          <Outlet />
-        </main>
+  return (
+    <div className="flex flex-col md:flex-row min-h-screen bg-gray-50 font-sans">
+      <div className="md:hidden flex items-center justify-between bg-white px-4 py-3 shadow">
+        <h1 className="text-lg font-bold text-blue-900">Skilviu - HR Team</h1>
+        <button onClick={() => setSidebarOpen(!sidebarOpen)}>
+          <Menu className="w-6 h-6" />
+        </button>
       </div>
-      );
+
+      <aside className={`fixed top-0 left-0 z-40 h-full w-64 bg-white shadow-md transform transition-transform duration-300 ease-in-out
+        ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 md:relative md:w-60 md:flex`}>
+        <div className="h-full overflow-y-auto pt-16 md:pt-0">
+          <Hrteamdashboard />
+        </div>
+      </aside>
+
+      <main className="flex-1 p-4 md:p-6 mt-16 md:mt-0 overflow-y-auto">
+        <Outlet />
+      </main>
+    </div>
+  );
 }
 
-      export {HrteamdashboardLayout};
-      export default App;
+export { HrteamdashboardLayout };
+export default App;
